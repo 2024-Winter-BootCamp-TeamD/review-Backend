@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import os
+from dotenv import load_dotenv
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -77,12 +79,25 @@ WSGI_APPLICATION = 'apiserver.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+
+
+# .env 파일 로드
+load_dotenv()
+# PyMySQL을 사용하도록 설정
+import pymysql
+pymysql.install_as_MySQLdb()
+# DATABASES 설정
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.getenv('MYSQL_DATABASE'),  # .env에서 데이터베이스 이름 가져오기
+        'USER': os.getenv('MYSQL_USER'),      # .env에서 사용자 이름 가져오기
+        'PASSWORD': os.getenv('MYSQL_PASSWORD'),  # .env에서 비밀번호 가져오기
+        'HOST': 'mysqldb',  # Docker Compose에서 설정한 MySQL 서비스 이름 (로컬 환경에서는 'localhost') 장고는 로컬 mysql 도커면 localhost, 둘 다 도커면 mysqldb로
+        'PORT': '3306',  # MySQL 기본 포트
     }
 }
+
 
 
 # Password validation
