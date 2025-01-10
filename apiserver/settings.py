@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     'pullrequest',
     'report',
     'repository',
-    'user'
+    'user',
+    'auth'
 ]
 
 SITE_ID = 1
