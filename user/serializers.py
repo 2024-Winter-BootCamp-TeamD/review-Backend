@@ -6,14 +6,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ['id', 'user', 'github_id', 'user_details', 'github_username', 'email',
+        fields = ['github_id', 'user_details', 'github_username', 'email',
                   'profile_image', 'review_mode', 'created_at', 'updated_at',]
 
     @staticmethod
     def get_user_details(obj):
         return {
             "id": obj.user.id,
-            "username": obj.user.username,
         }
     def validate_review_mode(self, value):
         valid_modes = [choice[0] for choice in UserProfile.REVIEW_MODES]
