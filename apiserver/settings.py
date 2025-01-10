@@ -27,7 +27,12 @@ SECRET_KEY = 'django-insecure-$z%bvmvvn__!qzdmta5j&v#jv#^09o^p)!bzwp1-q_hg@ec26b
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '127.0.0.1',  # 로컬 개발
+    'localhost',  # 로컬 개발
+    '374d-175-210-241-78.ngrok-free.app',  # ngrok 도메인 추가
+    'b6e8-175-210-241-78.ngrok-free.app'
+]
 
 
 # Application definition
@@ -39,10 +44,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.github',  # GitHub 연동
     'pullrequest',
     'report',
     'repository',
     'user'
+]
+
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # 기본 인증
+    'allauth.account.auth_backends.AuthenticationBackend',  # allauth 인증
 ]
 
 MIDDLEWARE = [
@@ -53,6 +69,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # 이 줄을 추가
 ]
 
 ROOT_URLCONF = 'apiserver.urls'
@@ -91,13 +108,20 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.getenv('MYSQL_DATABASE'),  # .env에서 데이터베이스 이름 가져오기
-        'USER': os.getenv('MYSQL_USER'),      # .env에서 사용자 이름 가져오기
-        'PASSWORD': os.getenv('MYSQL_PASSWORD'),  # .env에서 비밀번호 가져오기
-        'HOST': 'review-backend-mysqldb-1',  # Docker Compose에서 설정한 MySQL 서비스 이름 (로컬 환경에서는 'localhost') 장고는 로컬 mysql 도커면 localhost, 둘 다 도커면 mysqldb로
+        # 도커로 실행할 때
+    #   'USER': os.getenv('MYSQL_USER'),      # .env에서 사용자 이름 가져오기
+    #   'PASSWORD': os.getenv('MYSQL_PASSWORD'),  # .env에서 비밀번호 가져오기
+    #    'HOST': 'mysqldb',
+
+        # 로컬에서 실행할 때
+        'USER': os.getenv("MYSQL_ROOT_USER"),      # .env에서 사용자 이름 가져오기
+        'PASSWORD': os.getenv('MYSQL_ROOT_PASSWORD'),  # .env에서 비밀번호 가져오기
+        'HOST': 'localhost',
+
+
         'PORT': '3306',  # MySQL 기본 포트
     }
 }
-
 
 
 # Password validation
