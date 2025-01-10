@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import hello_view
+from .views import PRReviewListView
 
 urlpatterns = [
-    path('hello/', hello_view, name='hello')
+    path('api/v1/pr-reviews', PRReviewListView.as_view(), name='pr-review-list'),
 ]
