@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import render
 
 # Create your views here.
@@ -11,10 +12,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apiserver import settings
-
+from oauth.utils import social_user_get_or_create
 
 # Create your views here.
 load_dotenv()
+
 
 class LoginGithubView(APIView):
     def get(self, request):
@@ -22,11 +24,10 @@ class LoginGithubView(APIView):
         github_oauth_url = f"https://github.com/login/oauth/authorize?client_id={os.getenv("GITHUB_CLIENT_ID")}&redirect_uri={os.getenv("GITHUB_REDIRECT_URI")}&scope=repo,read:org,public_repo,write:discussion"
         return redirect(github_oauth_url)
 
-class LoginGithubCallbackView:
+
+class LoginGithubCallbackView(APIView):
     def get(self, request):
         code = request.GET.get('code')
-        if not code:
-            return Response({"error": "잘못된 깃허브 인가코드 입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         # GitHub 액세스 토큰 요청
         token_url = "https://github.com/login/oauth/access_token"
@@ -48,8 +49,31 @@ class LoginGithubCallbackView:
         user_info_url = "https://api.github.com/user"
         headers = {'Authorization': f'token {access_token}'}
         user_info_response = requests.get(user_info_url, headers=headers)
-        user_info = user_info_response.json()
+        user_data = user_info_response.json()
+        print(user_data)
+        user_profile, created = social_user_get_or_create(
+            github_id=user_data["id"],
+            github_username=user_data["login"],
+            email=user_data["email"],
+            profile_image=user_data["avatar_url"],
+            access_token=access_token
+        )
 
+        # 메시지 설정
+        if created:
+            message = "회원가입에 성공하였습니다."
+        else:
+            message = "로그인에 성공하였습니다."
 
+        # JSON 응답
+        response_data = {
+            "message": message,
+            "user": {
+                "id": user_profile.id,
+                "github_username": user_profile.github_username,
+                "email": user_profile.email,
+                "profile_image": user_profile.profile_image,
+            },
+        }
 
-        return Response({"user_info": user_info}, status=status.HTTP_200_OK)
+        return JsonResponse(response_data, status=200)
