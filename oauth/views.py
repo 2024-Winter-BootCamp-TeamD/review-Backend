@@ -1,18 +1,16 @@
 from django.http import JsonResponse
-from django.shortcuts import render
 
 # Create your views here.
 import os
 
 import requests
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
 from dotenv import load_dotenv
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from apiserver import settings
-from oauth.utils import social_user_get_or_create
+from repository.models import Repository
+from oauth.utils.loginUtils import social_user_get_or_create
 
 # Create your views here.
 load_dotenv()
@@ -25,6 +23,7 @@ class LoginGithubView(APIView):
         return redirect(github_oauth_url)
 
 
+# 나중에 리팩토링으로 함수로 나눠야 함
 class LoginGithubCallbackView(APIView):
     def get(self, request):
         code = request.GET.get('code')
@@ -65,6 +64,26 @@ class LoginGithubCallbackView(APIView):
         else:
             message = "로그인에 성공하였습니다."
 
+        ### 레포지토리 긁어와 전부 우선 DB에 저장, 이때 기능 적용 여부는 default로 False로 적용
+        repos = []
+
+        # 개인레포 읽어오기
+        self.GetPersonalRepos(access_token, repos, user_data)
+
+        # 오가니제이션 읽어오기
+        self.GetOrgsRepos(access_token, repos)
+
+        # 모든 레포를 가져온 repo를 각각 db에 저장
+        for repo in repos:
+            repository = Repository(
+                is_apply=False,
+                organization=repo['owner']['login'],
+                name=repo['name'],
+                repository_image=repo['owner']['avatar_url']
+            )
+            repository.full_clean()
+            repository.save()
+
         # JSON 응답
         response_data = {
             "message": message,
@@ -77,3 +96,23 @@ class LoginGithubCallbackView(APIView):
         }
 
         return JsonResponse(response_data, status=200)
+
+    def GetOrgsRepos(self, access_token, repos):
+        headers = {
+            'Authorization': f'token {access_token}'
+        }
+        response = requests.get('https://api.github.com/user/orgs', headers=headers)
+        orgs = response.json()
+        for org in orgs:
+            headers = {
+                'Authorization': f'token {access_token}'
+            }
+            response = requests.get(f'https://api.github.com/orgs/{org["login"]}/repos', headers=headers)
+            repos.extend(response.json())
+
+    def GetPersonalRepos(self, access_token, repos, user_data):
+        headers = {
+            'Authorization': f'token {access_token}'
+        }
+        response = requests.get(f'https://api.github.com/users/{user_data["login"]}/repos', headers=headers)
+        repos.extend(response.json())

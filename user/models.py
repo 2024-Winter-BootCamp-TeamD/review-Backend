@@ -32,7 +32,7 @@ class User(models.Model):
     github_username = models.CharField(max_length=100)
     access_token = models.CharField(max_length=100)
     email = models.EmailField(unique=True, null=True, blank=True)
-    review_mode = models.CharField(max_length=20, choices=REVIEW_MODES, default='Basic Mode')
+    review_mode = models.CharField(max_length=20, choices=REVIEW_MODES, default='basic mode')
     created_at = models.DateTimeField(auto_now_add=True)  # 기본값 제거
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
