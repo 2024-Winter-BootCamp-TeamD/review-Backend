@@ -1,4 +1,6 @@
 import logging
+
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -18,3 +20,18 @@ class UserDetailView(APIView):
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
             return Response({"error": "An unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class UserModeUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, user_id):
+        try:
+            user_profile = UserProfile.objects.get(user__id=user_id)
+        except UserProfile.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = UserProfileSerializer(user_profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
