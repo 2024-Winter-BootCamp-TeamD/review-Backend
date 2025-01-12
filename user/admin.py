@@ -1,7 +1,7 @@
 from django.contrib import admin
-from .models import UserProfile
+from .models import User
 
-class UserProfileAdmin(admin.ModelAdmin):
+class UserAdmin(admin.ModelAdmin):
 
     list_display = ('id', 'user', 'user_id', 'github_username', 'email', 'created_at', 'updated_at')
     list_filter = ('created_at', 'updated_at')
@@ -12,4 +12,4 @@ class UserProfileAdmin(admin.ModelAdmin):
     user_id.short_description = 'User ID'
 
 # Admin에 등록
-admin.site.register(UserProfile, UserProfileAdmin)
+admin.site.register(User, UserAdmin)
