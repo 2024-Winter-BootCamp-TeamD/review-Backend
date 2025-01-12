@@ -40,7 +40,7 @@ class LoginGithubCallbackView(APIView):
         response_data = response.json()
 
         if 'access_token' not in response_data:
-            return Response({"error": "깃허브 액세스 토큰을 받는데 실패 하였습니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error_message": "깃허브 액세스 토큰을 받는데 실패 하였습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         access_token = response_data.get('access_token')
 
