@@ -1,6 +1,6 @@
 from django.db import models
 
-class UserProfile(models.Model):
+class User(models.Model):
     REVIEW_MODES = [
         ('basic mode', 'Basic Mode'),
         ('clean mode', 'Clean Mode'),
