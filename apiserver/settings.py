@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.github',  # GitHub 연동
-    'pullrequest',
+    'pr_review',
     'report',
     'repository',
     'user',
