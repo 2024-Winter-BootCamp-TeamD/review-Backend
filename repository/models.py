@@ -1,8 +1,12 @@
 from django.db import models
 
+from user.models import User
+
+
 # Create your models here.
 class Repository(models.Model):
     id = models.AutoField(primary_key=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column='user_id')
     is_apply = models.BooleanField(default=False)
     organization = models.CharField(max_length=100, null=True)
     name = models.CharField(max_length=100)
