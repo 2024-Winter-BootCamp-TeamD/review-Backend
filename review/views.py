@@ -15,6 +15,7 @@ from .utils.deepSeekReview import file_code_review
 # 리뷰 대상 파일 확장자
 SUPPORTED_EXTENSIONS = {".py", ".java", ".jsx", ".js"}
 
+
 # 리팩토링 요소 정리
 ## 비동기 처리 구현
 ## 비동기 처리 구현 이후 웹훅에는 수신 응답 빠르게 반환해야 함
@@ -41,7 +42,7 @@ def github_webhook(request):
 
                 repository = Repository.objects.get(repository_github_id=repository_github_id)
                 repo_name = data['repository']['full_name']
-                print("repo_name:",repo_name)
+                print("repo_name:", repo_name)
 
                 hook_owner = User.objects.get(id=repository.user_id_id)
                 review_mode = hook_owner.review_mode
@@ -49,17 +50,6 @@ def github_webhook(request):
                 print(f"Sender's Username: {sender_username}")
                 print(f"Hook Owner: {hook_owner}")
                 print(f"review mode: {review_mode}")
-
-                pr_review = PRReview(
-                    user=hook_owner,
-                    title=pr['title'],
-                    pr_url=pr['url'],
-                    aver_grade="Pending",
-                    review_mode=review_mode,
-                    al_review="Pending"
-                )
-                pr_review.full_clean()
-                pr_review.save()
 
                 pr_number = pr['number']
                 print("pr_number:", pr_number)
@@ -69,8 +59,21 @@ def github_webhook(request):
 
                 commit_id = data['pull_request']['head']['sha']
 
-                # PR 코드 리뷰 처리
-                process_pr_code_review(pr_review, access_token, repo_name, pr_number, commit_id)
+                if sender_username == hook_owner.github_username:
+                    pr_review = PRReview(
+                        user=hook_owner,
+                        title=pr['title'],
+                        pr_url=pr['url'],
+                        aver_grade="Pending",
+                        review_mode=review_mode,
+                        al_review="Pending"
+                    )
+                    pr_review.full_clean()
+                    pr_review.save()
+                    process_pr_code_review(pr_review, access_token, repo_name, pr_number, commit_id)
+
+                else:
+                    process_pr_code_only_review(access_token, repo_name, pr_number, commit_id)
 
                 # 성공적인 응답 반환
                 return JsonResponse({
@@ -94,7 +97,6 @@ def github_webhook(request):
     return HttpResponseBadRequest("Invalid request method")
 
 
-
 def get_pr_files(access_token, repo_name, pr_number):
     """
     PR의 모든 파일 정보를 가져오는 함수
@@ -103,7 +105,7 @@ def get_pr_files(access_token, repo_name, pr_number):
     GITHUB_API_URL = "https://api.github.com"
 
     url = f"{GITHUB_API_URL}/repos/{repo_name}/pulls/{pr_number}/files"
-    print("get_url:",url)
+    print("get_url:", url)
     headers = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
     response = requests.get(url, headers=headers)
 
@@ -149,6 +151,7 @@ def post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path,
     else:
         print(f"Failed to post comment: {response.status_code}, {response.text}")
 
+
 def get_grade(score):
     if score in [1, 2]:
         return "D"
@@ -163,9 +166,11 @@ def get_grade(score):
     else:
         return "Unknown"  # 유효하지 않은 점수 처리
 
+
 def process_pr_code_review(pr_review, access_token, repo_name, pr_number, commit_id):
     """
     PR의 모든 파일에 대해 코드 리뷰를 수행하고, 결과를 PR에 댓글로 작성하는 함수
+    익스텐션 사용자의 pr인 경우 db에 저장
     """
     try:
         # PR의 모든 파일 가져오기
@@ -187,36 +192,71 @@ def process_pr_code_review(pr_review, access_token, repo_name, pr_number, commit
                 review_result = file_code_review(file_content)
                 print("review_result:", review_result)
 
-                # review 부분 추출
-                review_match = re.search(r'"review":\s*"([\s\S]*?)"', review_result)
-                if review_match:
-                    review_text = review_match.group(1)
-                    print("Review:", review_text)
-                else:
-                    review_text = ""  # review를 찾을 수 없는 경우 기본값
-
-                score_match = re.search(r'"score":\s*"(\d+)"', review_result)
-
-                if score_match:
-                    score = int(score_match.group(1))  # 숫자로 변환
-                else:
-                    score = 0  # score를 찾을 수 없는 경우 기본값
-
-                grade = get_grade(score)
-                print(f"Score: {score}, Grade: {grade}")  # 출력: Score: 7, Grade: A
+                store_file_review(file_path, pr_review, review_result)
 
                 # 리뷰 결과를 PR에 댓글로 추가
                 post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path, review_result)
 
-                file_review = FileReview(
-                    pr_review=pr_review,
-                    file_path=file_path,
-                    comment=review_text,
-                    grade=grade
-                )
-                print(f"Score: {score}, Grade: {grade}")  # 출력: Score: 7, Grade: A
-                file_review.full_clean()
-                file_review.save()
+
+            else:
+                print(f"Skipping unsupported file: {file_path}")
+    except Exception as e:
+        print(f"Error in process_pr_code_review: {str(e)}")
+
+
+def store_file_review(file_path, pr_review, review_result):
+    # review 부분 추출
+    review_match = re.search(r'"review":\s*"([\s\S]*?)"', review_result)
+    if review_match:
+        review_text = review_match.group(1)
+        print("Review:", review_text)
+    else:
+        review_text = ""  # review를 찾을 수 없는 경우 기본값
+    score_match = re.search(r'"score":\s*"(\d+)"', review_result)
+    if score_match:
+        score = int(score_match.group(1))  # 숫자로 변환
+    else:
+        score = 0  # score를 찾을 수 없는 경우 기본값
+    grade = get_grade(score)
+    print(f"Score: {score}, Grade: {grade}")  # 출력: Score: 7, Grade: A
+    file_review = FileReview(
+        pr_review=pr_review,
+        file_path=file_path,
+        comment=review_text,
+        grade=grade
+    )
+    print(f"Score: {score}, Grade: {grade}")  # 출력: Score: 7, Grade: A
+    file_review.full_clean()
+    file_review.save()
+
+
+def process_pr_code_only_review(access_token, repo_name, pr_number, commit_id):
+    """
+    PR의 모든 파일에 대해 코드 리뷰를 수행하고, 결과를 PR에 댓글로 작성하는 함수
+    이때 익스텐션 사용자의 pr이 아닌경우 db에 저장하지 않음
+    """
+    try:
+        # PR의 모든 파일 가져오기
+        pr_files = get_pr_files(access_token, repo_name, pr_number)
+
+        for file_info in pr_files:
+            file_path = file_info["filename"]
+
+            file_extension = os.path.splitext(file_path)[1]
+
+            # 지원하는 확장자인 경우에만 처리
+            if file_extension in SUPPORTED_EXTENSIONS:
+                print(f"Processing file: {file_path}")
+
+                # 파일 내용 가져오기
+                file_content = download_file_content(file_info["raw_url"])
+
+                # 코드 리뷰 수행
+                review_result = file_code_review(file_content)
+                print("review_result:", review_result)
+
+                # 리뷰 결과를 PR에 댓글로 추가
+                post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path, review_result)
             else:
                 print(f"Skipping unsupported file: {file_path}")
     except Exception as e:
