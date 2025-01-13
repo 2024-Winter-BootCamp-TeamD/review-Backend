@@ -116,9 +116,9 @@ DATABASES = {
         'HOST': 'mysqldb',
 
         # 로컬에서 실행할 때
-        # 'USER': os.getenv("MYSQL_ROOT_USER"),      # .env에서 사용자 이름 가져오기
-        # 'PASSWORD': os.getenv('MYSQL_ROOT_PASSWORD'),  # .env에서 비밀번호 가져오기
-        # 'HOST': 'localhost',
+        #'USER': os.getenv("MYSQL_ROOT_USER"),      # .env에서 사용자 이름 가져오기
+        #'PASSWORD': os.getenv('MYSQL_ROOT_PASSWORD'),  # .env에서 비밀번호 가져오기
+        #'HOST': 'localhost',
 
 
         'PORT': '3306',  # MySQL 기본 포트
@@ -173,3 +173,6 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',  # JSON 응답만 반환
     ],
 }
+
+DEEPSEEK_API_URL = os.getenv("DEEPSEEK_API_URL", 'https://api.deepseek.com')
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
