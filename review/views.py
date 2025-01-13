@@ -131,6 +131,11 @@ def post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path,
     """
     PR 파일에 댓글을 추가하는 함수
     """
+
+    if "제공된 코드가 없으므로 리뷰할 내용이 없습니다" in comment:
+        print(f"Skipping comment for {file_path}: 리뷰할 내용이 없습니다.")
+        return
+
     GITHUB_TOKEN = access_token
     GITHUB_API_URL = "https://api.github.com"
 
@@ -206,7 +211,7 @@ def process_pr_code_review(pr_review, access_token, repo_name, pr_number, commit
                 total_score += score
                 gather_reviews += review_text
                 # 리뷰 결과를 PR에 댓글로 추가
-                post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path, review_result)
+                post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path, review_text)
             else:
                 print(f"Skipping unsupported file: {file_path}")
 
@@ -332,7 +337,7 @@ def process_pr_code_only_review(access_token, repo_name, pr_number, commit_id):
                 gather_reviews += review_text
 
                 # 리뷰 결과를 PR에 댓글로 추가
-                post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path, review_result)
+                post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path, review_text)
             else:
                 print(f"Skipping unsupported file: {file_path}")
 
