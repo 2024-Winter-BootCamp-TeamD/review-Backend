@@ -1,10 +1,10 @@
 from django.db import models
 from django.conf import settings
-from django.contrib.auth.models import User
+from user.models import User
 
 class PRReview(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    title = models.CharField(max_length=100, default="Untitled")
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=100) #####
     pr_url = models.URLField(max_length=255)
     aver_grade = models.CharField(max_length=20)
     problem_type = models.CharField(max_length=20, null=True, blank=True)

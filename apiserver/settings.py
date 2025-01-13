@@ -55,13 +55,7 @@ INSTALLED_APPS = [
     'user',
     'oauth',
     'partreview',
-]
-
-SITE_ID = 1
-
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # 기본 인증
-    'allauth.account.auth_backends.AuthenticationBackend',  # allauth 인증
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
