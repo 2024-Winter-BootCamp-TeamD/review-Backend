@@ -67,7 +67,7 @@ def github_webhook(request):
                         pr_url=pr['url'],
                         aver_grade="Pending",
                         review_mode=review_mode,
-                        al_review="Pending"
+                        total_review="Pending"
                     )
                     pr_review.full_clean()
                     pr_review.save()
@@ -225,11 +225,11 @@ def process_pr_code_review(pr_review, access_token, repo_name, pr_number, commit
             pr_review_result = get_pr_review(gather_reviews, aver_grade)
 
             # pr에 총평 댓글로 남겨주는 함수 실행
-            al_review = post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result)
+            total_review = post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result)
 
             if aver_grade != 'A' and aver_grade != 'S':
                 pr_review.problem_type = get_problem_type(pr_review_result)
-            pr_review.al_review = al_review
+            pr_review.total_review = total_review
             pr_review.aver_grade = aver_grade
 
             pr_review.save()
