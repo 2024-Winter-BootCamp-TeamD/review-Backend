@@ -1,7 +1,6 @@
 import os
 
 import requests
-from django.http import JsonResponse
 from dotenv import load_dotenv
 
 from repository.models import Repository
