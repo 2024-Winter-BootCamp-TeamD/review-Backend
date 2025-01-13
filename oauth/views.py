@@ -77,6 +77,11 @@ class LoginGithubCallbackView(APIView):
         # 모든 레포를 가져온 repo를 각각 db에 저장
         user = User.objects.get(id=user_profile.id)
         for repo in repos:
+            # repository_github_id로 이미 존재하는지 확인
+            if Repository.objects.filter(repository_github_id=repo['id']).exists():
+                print(f"Repository with ID {repo['id']} already exists. Skipping...")
+                continue  # 이미 존재하면 건너뛰기
+
             repository = Repository(
                 user_id=user,
                 repository_github_id=repo['id'],
