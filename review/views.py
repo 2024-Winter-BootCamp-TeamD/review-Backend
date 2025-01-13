@@ -132,7 +132,7 @@ def post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path,
     PR 파일에 댓글을 추가하는 함수
     """
 
-    if "제공된 코드가 없으므로 리뷰할 내용이 없습니다" in comment:
+    if "리뷰할 내용이 없습니다" in comment:
         print(f"Skipping comment for {file_path}: 리뷰할 내용이 없습니다.")
         return
 
