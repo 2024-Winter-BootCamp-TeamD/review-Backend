@@ -10,7 +10,7 @@ client = OpenAI(api_key=os.getenv("DEEPSEEK_API_KEY"), base_url="https://api.dee
 
 
 # def file_code_review(code, review_mode, prompt): # 나중에 모드 여러개 프롬프트 만들면 수정
-def get_pr_review(review):
+def get_pr_review(review, aver_grade):
     try:
         response = client.chat.completions.create(
             model="deepseek-chat",
@@ -22,17 +22,13 @@ def get_pr_review(review):
     ##규칙
     ** {review}의 리뷰들을 세세히 검토하며, 해당 리뷰들을 아우르는 총평을 만들어줘야 합니다.
     - **total_review**: 당신에게 넘겨준 모든 리뷰들을 종합하여 총평을 만들어주세요
-    - **aver_grade**: 당신에게 넘겨준 리뷰들마다 점수가 있을것입니다. 그 점수들의 평균을 토대로 aver_grade를 정해주세요
-        - D(0~2) / C(3~4) / B(5~6) / A(7~8) / S(9~10)
-        - 해당 기준을 토대로 등급을 매겨주세요
-    - **problem_type**: 만약 aver_grade가 D,C,B라면 문제가 있다고 판단하여, 당신에게 넘겨준 리뷰들의 가장 큰 문제 하나를 키워드로 생성해 problem_type으로 지정해주세요
-
+    - **problem_type**: 만약 평균 등급이 D,C,B라면 문제가 있다고 판단하여, 당신에게 넘겨준 리뷰들의 가장 큰 문제 하나를 키워드로 생성해 problem_type으로 지정해주세요
+        - 평균 등급이 A,S인경우 problem_type은 아예 출력하지 마세요
     ## 출력 형식
     출력 형식은 JSON 형태로 각 key는 다음과 같이 구성되어야 합니다. 
     답안은 [] 내부에 작성되어야 하며, JSON 형태로만 제공합니다.
     [
         "total_review": " ",
-        "aver_grade": " " ,
         "problem_type": " " ,
     ]
 
@@ -41,6 +37,7 @@ def get_pr_review(review):
     
     ## 입력 데이터
     - 코드: {review}
+    - 평균 등급: {aver_grade}
 
                 '''},
             ],
