@@ -283,7 +283,6 @@ def store_file_review(file_path, pr_review, review_result):
     else:
         score = 0  # score를 찾을 수 없는 경우 기본값
     grade = get_grade(score)
-    print(f"Score: {score}, Grade: {grade}")  # 출력: Score: 7, Grade: A
     file_review = FileReview(
         pr_review=pr_review,
         file_path=file_path,
@@ -302,6 +301,10 @@ def process_pr_code_only_review(access_token, repo_name, pr_number, commit_id):
     PR의 모든 파일에 대해 코드 리뷰를 수행하고, 결과를 PR에 댓글로 작성하는 함수
     이때 익스텐션 사용자의 pr이 아닌경우 db에 저장하지 않음
     """
+    # 등급 평균 추출 준비
+    file_num = 0
+    total_score = 0
+    gather_reviews = ""
     try:
         # PR의 모든 파일 가져오기
         pr_files = get_pr_files(access_token, repo_name, pr_number)
@@ -315,6 +318,8 @@ def process_pr_code_only_review(access_token, repo_name, pr_number, commit_id):
             if file_extension in SUPPORTED_EXTENSIONS:
                 print(f"Processing file: {file_path}")
 
+                file_num += 1
+
                 # 파일 내용 가져오기
                 file_content = download_file_content(file_info["raw_url"])
 
@@ -322,11 +327,49 @@ def process_pr_code_only_review(access_token, repo_name, pr_number, commit_id):
                 review_result = file_code_review(file_content)
                 print("review_result:", review_result)
 
+                review_text, score = get_score_review_text(file_path, review_result)
+                total_score += score
+                gather_reviews += review_text
+
                 # 리뷰 결과를 PR에 댓글로 추가
                 post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path, review_result)
             else:
                 print(f"Skipping unsupported file: {file_path}")
+
+        if file_num > 0:
+            aver_score = total_score / file_num
+            aver_grade = get_grade(aver_score)
+            print("aver_grade:", aver_grade)
+            print("gather_reviews:", gather_reviews)
+
+            # 받은 모든 리뷰를 토대로 PR리뷰 받기
+            pr_review_result = get_pr_review(gather_reviews, aver_grade)
+
+            if aver_grade != 'A' and aver_grade != 'S':
+                problem_type = get_problem_type(pr_review_result)
+
+            # pr에 총평 댓글로 남겨주는 함수 실행
+            post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result)
     except Exception as e:
         print(f"Error in process_pr_code_review: {str(e)}")
 
-# PR에 댓글 남기는 함수
+
+def get_score_review_text(file_path, review_result):
+    # review 부분 추출
+    review_match = re.search(r'"review":\s*"([\s\S]*?)"', review_result)
+    if review_match:
+        review_text = review_match.group(1)
+        print("Review:", review_text)
+    else:
+        review_text = ""  # review를 찾을 수 없는 경우 기본값
+    score_match = re.search(r'"score":\s*"(\d+)"', review_result)
+    if score_match:
+        score = int(score_match.group(1))  # 숫자로 변환
+    else:
+        score = 0  # score를 찾을 수 없는 경우 기본값
+
+    grade = get_grade(score)
+
+    print(f"Score: {score}, Grade: {grade}")  # 출력: Score: 7, Grade: A
+
+    return review_text, score
