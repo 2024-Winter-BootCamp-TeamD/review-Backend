@@ -52,7 +52,8 @@ INSTALLED_APPS = [
     'report',
     'repository',
     'user',
-    'oauth'
+    'oauth',
+    'review'
 ]
 
 SITE_ID = 1
