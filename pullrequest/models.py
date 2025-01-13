@@ -1,5 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
+from user.models import User
 
 class PRReview(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

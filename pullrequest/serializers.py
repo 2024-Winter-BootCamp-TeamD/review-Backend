@@ -9,3 +9,4 @@ class PRReviewSerializer(serializers.ModelSerializer):
             'problem_type', 'review_mode', 'total_review',
             'is_deleted', 'created_at', 'updated_at'
         ]
+
