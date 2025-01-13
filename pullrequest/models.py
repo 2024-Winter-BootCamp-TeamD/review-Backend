@@ -10,7 +10,7 @@ class PRReview(models.Model):
     aver_grade = models.CharField(max_length=20)
     problem_type = models.CharField(max_length=20, null=True, blank=True)
     review_mode = models.CharField(max_length=20)
-    al_review = models.TextField()
+    total_review = models.TextField()
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

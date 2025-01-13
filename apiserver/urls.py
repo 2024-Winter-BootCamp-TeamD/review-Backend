@@ -16,11 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('pullrequest.urls')),  # API 엔드포인트 연결
     path('api/', include('user.urls')),  # 사용자 엔드포인트
     path('api/v1/', include('oauth.urls')),
-    path('', include('review.urls'))
+    path('', include('review.urls')),
+    path('api/', include('partreview.urls')), # 드래그 코드 엔드포인트
 ]

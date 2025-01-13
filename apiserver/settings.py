@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -53,6 +54,8 @@ INSTALLED_APPS = [
     'repository',
     'user',
     'oauth',
+    'partreview',
+    'rest_framework',
     'review'
 ]
 
