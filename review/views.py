@@ -49,7 +49,7 @@ def github_webhook(request):
                 review_mode = hook_owner.review_mode
                 print(action)
                 print(f"Sender's Username: {sender_username}")
-                print(f"Hook Owner: {hook_owner}")
+                print(f"Hook Owner: {hook_owner.github_username}")
                 print(f"review mode: {review_mode}")
 
                 pr_number = pr['number']
