@@ -18,3 +18,6 @@ class User(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)  # 기본값 제거
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'user_user'
