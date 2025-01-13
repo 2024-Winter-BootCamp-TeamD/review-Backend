@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from pullrequest.models import FileReview, PRReview
 from repository.models import Repository
 from user.models import User
-from .utils.deepSeekReview import file_code_review
+from .utils.fileReview import file_code_review
 
 # 리뷰 대상 파일 확장자
 SUPPORTED_EXTENSIONS = {".py", ".java", ".jsx", ".js"}
@@ -261,3 +261,5 @@ def process_pr_code_only_review(access_token, repo_name, pr_number, commit_id):
                 print(f"Skipping unsupported file: {file_path}")
     except Exception as e:
         print(f"Error in process_pr_code_review: {str(e)}")
+
+# PR에 댓글 남기는 함수
