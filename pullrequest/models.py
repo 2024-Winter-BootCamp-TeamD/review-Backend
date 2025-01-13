@@ -1,6 +1,7 @@
 from django.db import models
-from django.conf import settings
+
 from user.models import User
+
 
 class PRReview(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -16,3 +17,14 @@ class PRReview(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class FileReview(models.Model):
+    id = models.AutoField(primary_key=True)
+    pr_review = models.ForeignKey(PRReview, on_delete=models.CASCADE)
+    file_path = models.CharField(max_length=255)
+    comment = models.TextField()
+    grade = models.CharField(max_length=20)
+    is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)  # 기본값 제거
+    updated_at = models.DateTimeField(auto_now=True)

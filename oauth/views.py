@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from repository.models import Repository
 from oauth.utils.loginUtils import social_user_get_or_create
+from user.models import User
 
 # Create your views here.
 load_dotenv()
@@ -74,8 +75,16 @@ class LoginGithubCallbackView(APIView):
         self.GetOrgsRepos(access_token, repos)
 
         # 모든 레포를 가져온 repo를 각각 db에 저장
+        user = User.objects.get(id=user_profile.id)
         for repo in repos:
+            # repository_github_id로 이미 존재하는지 확인
+            if Repository.objects.filter(repository_github_id=repo['id']).exists():
+                print(f"Repository with ID {repo['id']} already exists. Skipping...")
+                continue  # 이미 존재하면 건너뛰기
+
             repository = Repository(
+                user_id=user,
+                repository_github_id=repo['id'],
                 is_apply=False,
                 organization=repo['owner']['login'],
                 name=repo['name'],
