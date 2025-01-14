@@ -12,9 +12,6 @@ logger = logging.getLogger(__name__)
 
 class ReportAPIView(APIView):
     def get(self, request):
-        """
-        보고서 목록 조회 (GET 요청)
-        """
         try:
             # 페이지네이션 처리
             page = int(request.query_params.get('page', 1))  # 기본 페이지: 1
@@ -49,9 +46,6 @@ class ReportAPIView(APIView):
             return Response({"error_message": "보고서 목록 조회 실패"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def post(self, request):
-        """
-        보고서 생성 (POST 요청)
-        """
         try:
             user_id = request.data.get('user_id')
             report_title = request.data.get('report_title')
@@ -125,3 +119,20 @@ class ReportDetailAPIView(APIView):
         except Exception as e:
             logger.error(f"특정 보고서 조회 중 오류 발생: {e}")
             return Response({"error_message": f"보고서 조회 실패: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class ReportDownloadAPIView(APIView):
+    def get(self, request, report_id):
+        try:
+            report = Report.objects.get(report_id=report_id)
+
+            response_data = {
+                "pdf_url": report.pdf_url
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except Report.DoesNotExist:
+            return Response({"error": "Report not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            logger.error(f"Error fetching report download URL: {e}")
+            return Response({"error": "An unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
