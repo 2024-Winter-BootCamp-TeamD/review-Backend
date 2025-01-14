@@ -66,9 +66,8 @@ class PRReviewListView(APIView):
 # PR 리뷰 검색
 class PRReviewSearchView(APIView):
     def get(self, request):
-        title = request.query_params.get('title', '').strip()
-
         user_id = request.query_params.get('user')
+        title = request.query_params.get('title', '').strip()
         queryset = get_active_pr_reviews(user_id=user_id, query=title)
 
         if not queryset.exists():
@@ -84,29 +83,22 @@ class PRReviewSearchView(APIView):
 class PRReviewAverageGradeView(APIView):
     def get(self, request):
         user_id = request.query_params.get('user')
-        if not user_id:
-            return error_response("사용자를 입력하세요.")
+        queryset = get_active_pr_reviews(user_id=user_id).order_by('-id')[:7]
 
-        try:
-            queryset = get_valid_queryset(
-                get_active_pr_reviews(user_id=user_id).order_by('-id')[:7],
-                "해당 사용자의 PR 리뷰가 없습니다."
-            )
+        if not queryset.exists():
+            return error_response("PR 리뷰가 존재하지 않습니다.", status_code=status.HTTP_404_NOT_FOUND)
 
-            serialized_data = [
-                {
-                    "pull_request_id": pr.id,
-                    "title": pr.title,
-                    "aver_grade": pr.aver_grade,
-                    "created_at": pr.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                }
-                for pr in queryset
-            ]
+        serialized_data = [
+            {
+                "pull_request_id": pr.id,
+                "title": pr.title,
+                "aver_grade": pr.aver_grade,
+                "created_at": pr.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+            for pr in queryset
+        ]
 
-            return success_response({"data": serialized_data})
-
-        except ValueError as e:
-            return error_response(str(e), status_code=status.HTTP_404_NOT_FOUND)
+        return success_response({"data": serialized_data})
 
 # 최신 10개 문제 유형 조회
 class PRReviewTroubleTypeView(APIView):
