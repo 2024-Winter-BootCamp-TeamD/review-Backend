@@ -30,7 +30,7 @@ def error_response(message, details=None, status_code=status.HTTP_400_BAD_REQUES
 # 페이지네이션
 class CustomPageNumberPagination(PageNumberPagination):
     page_size = 10  # 기본 페이지 크기
-    page_size_query_param = 'size'  # 클라이언트가 페이지 크기 조정 가능
+    page_size_query_param = 'size'  # 클라이언트가 요청
     page_query_param = 'page'  # 페이지 번호
     max_page_size = 100  # 최대 페이지 크기 제한
 
@@ -46,7 +46,7 @@ class CustomPageNumberPagination(PageNumberPagination):
 # PR 리뷰 전체조회
 class PRReviewListView(APIView):
     def get(self, request):
-        user_id = request.query_params.get('user') # request.user.id 사용??
+        user_id = request.query_params.get('user_id') # request.user.id 사용??
         queryset = get_active_pr_reviews(user_id=user_id)
 
         if not queryset.exists():
@@ -62,8 +62,12 @@ class PRReviewListView(APIView):
 # PR 리뷰 검색
 class PRReviewSearchView(APIView):
     def get(self, request):
-        user_id = request.query_params.get('user')
+        user_id = request.query_params.get('user_id')
         title = request.query_params.get('title', '').strip()
+
+        if not title:
+            return error_response("검색어를 입력해주세요.", status_code=status.HTTP_400_BAD_REQUEST)
+
         queryset = get_active_pr_reviews(user_id=user_id, query=title)
 
         if not queryset.exists():
@@ -78,13 +82,11 @@ class PRReviewSearchView(APIView):
 # 최신 7개 PR 평균 등급 조회
 class PRReviewAverageGradeView(APIView):
     def get(self, request):
-        user_id = request.query_params.get('user')
+        user_id = request.query_params.get('user_id')
         queryset = get_active_pr_reviews(user_id=user_id).order_by('-id')[:7]
 
-        # 빈 배열로 반환?
         if not queryset.exists():
             return success_response({"data": {}})
-            # return error_response("PR 리뷰가 존재하지 않습니다.", status_code=status.HTTP_404_NOT_FOUND)
 
         serialized_data = [
             {
@@ -101,7 +103,7 @@ class PRReviewAverageGradeView(APIView):
 # 최신 10개 문제 유형 조회
 class PRReviewTroubleTypeView(APIView):
     def get(self, request):
-        user_id = request.query_params.get('user')
+        user_id = request.query_params.get('user_id')
         # 문제 유형이 null이 아닌 경우만 가져옴
         queryset = get_active_pr_reviews(user_id=user_id).exclude(problem_type__isnull=True).order_by('-id')[:10]
 
@@ -116,7 +118,7 @@ class PRReviewTroubleTypeView(APIView):
 # 전체 PR 모드 카테고리 통계 조회
 class PRReviewCategoryStatisticsView(APIView):
     def get(self, request):
-        user_id = request.query_params.get('user')
+        user_id = request.query_params.get('user_id')
         queryset = get_active_pr_reviews(user_id=user_id)
 
         if not queryset.exists():
