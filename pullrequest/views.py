@@ -1,3 +1,4 @@
+from collections import Counter
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -95,5 +96,40 @@ class PRReviewAverageGradeView(APIView):
         except Exception as e:
             return Response(
                 {"error_message": "최신 7개 PR의 평균 등급 조회 실패", "details": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+# 최신 10개 문제 유형 조회
+class PRReviewTroubleTypeView(APIView):
+    def get(self, request):
+        user_id = request.query_params.get('user')
+        if not user_id:
+            return Response(
+                {"error_message": "사용자를 입력하세요."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # 최신 10개 PR 필터링
+            queryset = (
+                PRReview.objects.filter(user_id=user_id, is_deleted=False)
+                .order_by('-created_at')[:10]
+            )
+
+            if not queryset.exists():
+                return Response(
+                    {"error_message": "해당 사용자의 PR 리뷰가 없습니다."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # 문제 유형 집계
+            problem_types = queryset.values_list('problem_type', flat=True)
+            problem_type_count = Counter(problem_types)
+
+            return Response({"data": problem_type_count}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"error_message": "최신 10개 문제 유형 조회 실패", "details": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
