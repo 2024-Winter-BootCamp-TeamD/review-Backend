@@ -21,8 +21,6 @@ class UserReportAPIView(APIView):
 
             response_data = {
                 "total_count": paginator.count,
-                "total_pages": paginator.num_pages,
-                "current_page": page,
                 "reports": [
                     {
                         "report_id": report.report_id,
