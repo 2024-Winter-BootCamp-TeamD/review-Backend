@@ -15,7 +15,7 @@ def get_active_pr_reviews(user_id=None, query=None):
         queryset = queryset.filter(title__icontains=query)
     return queryset
 
-# 중복된 쿼리셋 검사
+# 쿼리셋 검사
 def get_valid_queryset(queryset, empty_message):
     if not queryset.exists():
         raise ValueError(empty_message)
@@ -35,13 +35,23 @@ def error_response(message, details=None, status_code=status.HTTP_400_BAD_REQUES
 # 페이지네이션
 class CustomPageNumberPagination(PageNumberPagination):
     page_size = 10  # 기본 페이지 크기
-    page_size_query_param = 'size'  # 페이지 크기 지정
-    page_query_param = 'page'  # 페이지 번호 지정
+    page_size_query_param = 'size'  # 클라이언트가 페이지 크기 조정 가능
+    page_query_param = 'page'  # 페이지 번호
+    max_page_size = 100  # 최대 페이지 크기 제한
+
+    def get_paginated_response(self, data):
+        return Response({
+            "currentPage": self.page.number,
+            "totalPages": self.page.paginator.num_pages,
+            "totalItems": self.page.paginator.count,
+            "hasNextPage": self.page.has_next(),
+            "data": data
+        })
 
 # PR 리뷰 전체조회
 class PRReviewListView(APIView):
     def get(self, request):
-        user_id = request.query_params.get('user')
+        user_id = request.query_params.get('user') # request.user.id 사용??
         queryset = get_active_pr_reviews(user_id=user_id)
 
         if not queryset.exists():
@@ -49,27 +59,25 @@ class PRReviewListView(APIView):
 
         paginator = CustomPageNumberPagination()
         paginated_queryset = paginator.paginate_queryset(queryset, request)
-
         serializer = PRReviewSerializer(paginated_queryset, many=True)
+
         return paginator.get_paginated_response(serializer.data)
 
 # PR 리뷰 검색
 class PRReviewSearchView(APIView):
     def get(self, request):
-        query = request.query_params.get('q', '').strip()
-        if not query:
-            return error_response("검색어를 입력해주세요.", status_code=status.HTTP_400_BAD_REQUEST)
+        title = request.query_params.get('title', '').strip()
 
         user_id = request.query_params.get('user')
-        queryset = get_active_pr_reviews(user_id=user_id, query=query)
+        queryset = get_active_pr_reviews(user_id=user_id, query=title)
 
         if not queryset.exists():
             return success_response({"message": "검색된 PR 리뷰가 없습니다."})
 
         paginator = CustomPageNumberPagination()
         paginated_queryset = paginator.paginate_queryset(queryset, request)
-
         serializer = PRReviewSerializer(paginated_queryset, many=True)
+
         return paginator.get_paginated_response(serializer.data)
 
 # 최신 7개 PR 평균 등급 조회
