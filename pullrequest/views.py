@@ -8,17 +8,12 @@ from .serializers import PRReviewSerializer
 
 # 삭제된 유저, 리뷰 필터링 로직
 def get_active_pr_reviews(user_id=None, query=None):
+    # user__is_deleted 검사하는 부분은 필요 없어 보이지만 보안을 위해 넣어둠
     queryset = PRReview.objects.filter(is_deleted=False, user__is_deleted=False)
     if user_id:
         queryset = queryset.filter(user_id=user_id)
     if query:
         queryset = queryset.filter(title__icontains=query)
-    return queryset
-
-# 쿼리셋 검사
-def get_valid_queryset(queryset, empty_message):
-    if not queryset.exists():
-        raise ValueError(empty_message)
     return queryset
 
 # 성공 응답 처리
@@ -55,7 +50,8 @@ class PRReviewListView(APIView):
         queryset = get_active_pr_reviews(user_id=user_id)
 
         if not queryset.exists():
-            return error_response("PR 리뷰가 없습니다.", status_code=status.HTTP_404_NOT_FOUND)
+            return success_response({"data": {}})
+            # return error_response("PR 리뷰가 없습니다.", status_code=status.HTTP_404_NOT_FOUND)
 
         paginator = CustomPageNumberPagination()
         paginated_queryset = paginator.paginate_queryset(queryset, request)
@@ -71,7 +67,7 @@ class PRReviewSearchView(APIView):
         queryset = get_active_pr_reviews(user_id=user_id, query=title)
 
         if not queryset.exists():
-            return success_response({"message": "검색된 PR 리뷰가 없습니다."})
+            return success_response({"data": {}})
 
         paginator = CustomPageNumberPagination()
         paginated_queryset = paginator.paginate_queryset(queryset, request)
@@ -85,8 +81,10 @@ class PRReviewAverageGradeView(APIView):
         user_id = request.query_params.get('user')
         queryset = get_active_pr_reviews(user_id=user_id).order_by('-id')[:7]
 
+        # 빈 배열로 반환?
         if not queryset.exists():
-            return error_response("PR 리뷰가 존재하지 않습니다.", status_code=status.HTTP_404_NOT_FOUND)
+            return success_response({"data": {}})
+            # return error_response("PR 리뷰가 존재하지 않습니다.", status_code=status.HTTP_404_NOT_FOUND)
 
         serialized_data = [
             {
@@ -104,40 +102,27 @@ class PRReviewAverageGradeView(APIView):
 class PRReviewTroubleTypeView(APIView):
     def get(self, request):
         user_id = request.query_params.get('user')
-        if not user_id:
-            return error_response("사용자를 입력하세요.")
+        # 문제 유형이 null이 아닌 경우만 가져옴
+        queryset = get_active_pr_reviews(user_id=user_id).exclude(problem_type__isnull=True).order_by('-id')[:10]
 
-        try:
-            queryset = get_valid_queryset(
-                get_active_pr_reviews(user_id=user_id).exclude(problem_type__isnull=True).order_by('-id')[:10],
-                "해당 사용자의 PR 리뷰가 없습니다."
-            )
+        if not queryset.exists():
+            return success_response({"data": {}})
 
-            problem_types = queryset.values_list('problem_type', flat=True)
-            problem_type_count = Counter(problem_types)
+        problem_types = queryset.values_list('problem_type', flat=True)
+        problem_type_count = Counter(problem_types)
 
-            return success_response({"data": problem_type_count})
-
-        except ValueError as e:
-            return error_response(str(e), status_code=status.HTTP_404_NOT_FOUND)
+        return success_response({"data": problem_type_count})
 
 # 전체 PR 모드 카테고리 통계 조회
 class PRReviewCategoryStatisticsView(APIView):
     def get(self, request):
         user_id = request.query_params.get('user')
-        if not user_id:
-            return error_response("사용자를 입력하세요.")
+        queryset = get_active_pr_reviews(user_id=user_id)
 
-        try:
-            queryset = get_valid_queryset(
-                get_active_pr_reviews(user_id=user_id),
-                "해당 사용자의 PR 리뷰가 없습니다."
-            )
+        if not queryset.exists():
+            return success_response({"data": {}})
 
-            review_modes = queryset.values_list('review_mode', flat=True)
-            mode_statistics = Counter(review_modes)
+        review_modes = queryset.values_list('review_mode', flat=True)
+        mode_statistics = Counter(review_modes)
 
-            return success_response({"statistics": mode_statistics})
-
-        except ValueError as e:
-            return error_response(str(e), status_code=status.HTTP_404_NOT_FOUND)
+        return success_response({"statistics": mode_statistics})
