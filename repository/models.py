@@ -9,7 +9,7 @@ class Repository(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column='user_id')
     repository_github_id = models.CharField(max_length=20, unique=True)
     is_apply = models.BooleanField(default=False)
-    hook_id = models.IntegerField(null=True)
+    hook_id = models.IntegerField(null=True, blank=True)
     organization = models.CharField(max_length=100, null=True)
     name = models.CharField(max_length=100)
     repository_image = models.URLField(max_length=200, blank=True, null=True)
