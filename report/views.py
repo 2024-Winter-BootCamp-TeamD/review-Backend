@@ -28,6 +28,7 @@ class UserReportAPIView(APIView):
                         "content": report.content,
                         "pdf_url": report.pdf_url,
                         "review_num": report.review_num,
+                        "is_deleted": report.is_deleted,
                         "created_at": report.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                         "updated_at": report.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
                     }
@@ -93,6 +94,10 @@ class ReportDetailAPIView(APIView):
     def get(self, request, report_id):
         try:
             report = Report.objects.get(report_id=report_id)
+
+            if report.is_deleted:
+                return Response({"error_message": "삭제된 보고서입니다."}, status=status.HTTP_404_NOT_FOUND)
+
             return Response({
                 "report_id": report.report_id,
                 "user_id": report.user_id,
@@ -100,6 +105,7 @@ class ReportDetailAPIView(APIView):
                 "content": report.content,
                 "pdf_url": report.pdf_url,
                 "review_num": report.review_num,
+                "is_deleted": report.is_deleted,
                 "created_at": report.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 "updated_at": report.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
             }, status=status.HTTP_200_OK)
@@ -113,7 +119,7 @@ class ReportDeleteAPIView(APIView):
     def delete(self, request, report_id):
         try:
             # 삭제 대상 보고서 조회
-            report = Report.objects.filter(report_id=report_id).first()
+            report = Report.objects.filter(report_id=report_id, is_deleted=False).first()
 
             if not report:
                 # 대상 보고서가 없을 경우 404 응답 반환
@@ -134,7 +140,13 @@ class ReportDeleteAPIView(APIView):
 class ReportDownloadAPIView(APIView):
     def get(self, request, report_id):
         try:
-            report = Report.objects.get(report_id=report_id)
+            report = Report.objects.filter(report_id=report_id, is_deleted=False).first()
+
+            if report.is_deleted:
+                return Response({"error_message": "삭제된 보고서입니다."}, status=status.HTTP_404_NOT_FOUND)
+
+            if not report:
+                return Response({"error": "Report not found or already deleted"}, status=status.HTTP_404_NOT_FOUND)
 
             response_data = {
                 "pdf_url": report.pdf_url
