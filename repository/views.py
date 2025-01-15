@@ -64,7 +64,9 @@ class ApplyRepositoryView(APIView):
         updated_count = qs.update(is_apply=is_apply)
 
 
-        """if is_apply==False:
+        if is_apply==False: #is_apply가 false일때
+            false_results = []
+            false_failed_repos=[]
             for repo in qs:
                 repo_user = User.objects.get(id=repo.user_id.id)
                 result = deactivateWebhook(
@@ -74,17 +76,27 @@ class ApplyRepositoryView(APIView):
                     hook_id=repo.hook_id,
                     repo_id=repo.id
                 )
-                return Response(
-                    {
-                        "id": repo.id, "message": result["message"]
-                    }
-                )"""
+                if result["status"] == "success":
+                    false_results.append({"id": repo.id, "message": result["message"]})
+                else:
+                    false_failed_repos.append({"id": repo.id, "error": result["message"]})
+                    continue
+            return Response(
+                {
+                    "webhook": {
+                        "success": false_results,
+                        "failed": false_failed_repos,
+                    },
+                }
+            )
 
-        if is_apply:
+
+
+
+        if is_apply==True:
             results = []  # 성공 결과 저장
             failed_repos = []  # 실패한 repo 저장
-            create_results=[]
-            failed_results=[]
+
 
             for repo in qs:
                 repo_user = User.objects.get(id=repo.user_id.id)
@@ -94,8 +106,13 @@ class ApplyRepositoryView(APIView):
                     organization=repo.organization,
                     repo_name=repo.name,
                     access_token=repo_user.access_token,
-                    repo_id=repo.id
+                    repo_id=repo.id,
+                    repo=repo,
                 )
+                if result["status"] == "success" and result.get("message", "").startswith("Already Existing"):
+                    results.append({"id": repo.id, "message": result["message"]})
+                    continue
+
                 if result["status"] == "success":
                     results.append({"id": repo.id, "message": result["message"]})
                     # 웹훅 ID 저장
@@ -105,44 +122,17 @@ class ApplyRepositoryView(APIView):
                     failed_repos.append({"id": repo.id, "error": result["message"]})
                     continue
 
-                result = activateWebhook(
-                    organization=repo.organization,
-                    repo_name=repo.name,
-                    access_token=repo_user.access_token,
-                    hook_id=repo.hook_id,
-                    repo_id=repo.id
-                )
-                if result["status"] == "success":
-                    create_results.append({"id": repo.id, "message": result["message"]})
-                else:
-                    failed_results.append({"id": repo.id, "error": result["message"]})
             return Response(
                 {
-                    "webhook_creation": {
+                    "webhook": {
                         "success": results,
                         "failed": failed_repos,
                     },
-                    "webhook_activation": {
-                        "success": create_results,
-                        "failed": failed_results,
-                    },
+
                 }
             )
 
-            """if is_apply==False:
-            for repo in qs:
-                result=deactivateWebhook(
-                    organization=repo.organization,
-                    repo_name=repo.name,
-                    access_token=User.access_token,
-                    hook_id=repo.hook_id,
-                    repo_id=repo.id
-                )
-                return Response(
-                    {
-                        "id": repo.id, "message": result["message"]
-                    }
-                )"""
+
 
 
             # 4) 응답 반환

@@ -2,17 +2,14 @@ import os
 
 import requests
 from dotenv import load_dotenv
-
+from rest_framework.response import Response
 from repository.models import Repository
+from user.models import User
 
 load_dotenv()
 
 # 레포지토리에 웹훅을 거는 함수
-def createWebhook(organization, repo_name, access_token, repo_id):
-
-    """existing_webhook = Repository.objects.filter(id=repo_id, is_apply=True).exists()
-    if existing_webhook:
-        return {"status": "error", "message": f"Webhook already exists for {repo_path}"}"""
+def createWebhook(organization, repo_name, access_token, repo_id, repo):
 
     repo_path = f"{organization}/{repo_name}"
     webhook_url = os.getenv("GITHUB_WEBHOOK_URL")  # 환경 변수에서 웹훅 URL 가져오기
@@ -38,7 +35,21 @@ def createWebhook(organization, repo_name, access_token, repo_id):
 
     # 기존 웹훅이 존재하면 종료
     if existing_webhook_id:
-        return {"status": "error", "message": f"Webhook already exists for {repo_path} (ID: {existing_webhook_id})"}
+        repo_user = User.objects.get(id=repo.user_id.id)
+        result=activateWebhook(
+            organization=repo.organization,
+            repo_name=repo.name,
+            access_token=repo_user.access_token,
+            hook_id=repo.hook_id,
+            repo_id=repo.id
+        )
+        return {
+            "status": result["status"],
+            "message": result["message"],
+        }
+
+
+
     url = f'https://api.github.com/repos/{repo_path}/hooks'
     print(f"Repository Path: {repo_path}")
     print(f"Requesting URL: {url}")
@@ -96,7 +107,7 @@ def activateWebhook(organization, repo_name, access_token, hook_id, repo_id):
         repository = Repository.objects.get(id=repo_id)
         repository.is_apply = True
         repository.save()
-        return {"status": "success", "message": f"Webhook(id:{hook_id}) activated successfully."}
+        return {"status": "success", "message": f"Already Existing Webhook(id:{hook_id}) activated successfully."}
     else:
         return {"status": "error",
                 "message": f"Failed to activate webhook(id:{hook_id}): {response.status_code} - {response.text}"}
