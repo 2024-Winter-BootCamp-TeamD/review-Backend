@@ -1,4 +1,6 @@
 from collections import Counter
+
+from django.db.models import Count
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
@@ -102,9 +104,8 @@ class PRReviewCategoryStatisticsView(APIView):
     def get(self, request):
         queryset = filter_pr_reviews(request.query_params.get('user_id'))
         if not queryset:
-            return success_response({"data": {}})
+            return success_response({"statistics": {}})
 
-        review_modes = queryset.values_list('review_mode', flat=True)
-        mode_statistics = Counter(review_modes)
+        review_mode_count = queryset.values('review_mode').annotate(count=Count('review_mode')).order_by('-count')
 
-        return success_response({"statistics": mode_statistics})
+        return success_response({"statistics": {item['review_mode']: item['count'] for item in review_mode_count}})
