@@ -6,12 +6,9 @@ from rest_framework import status
 from .models import PRReview
 from .serializers import PRReviewSerializer
 
-# 삭제된 유저, 리뷰 필터링 로직
-def filter_pr_reviews(user_id, query=None):
-    queryset = PRReview.objects.filter(is_deleted=False, user_id=user_id)
-    if query:
-        queryset = queryset.filter(title__icontains=query)
-    return queryset
+# 필수 필터링 로직
+def filter_pr_reviews(user_id):
+    return PRReview.objects.filter(is_deleted=False, user_id=user_id)
 
 # 성공 응답 처리
 def success_response(data, status_code=status.HTTP_200_OK):
@@ -27,7 +24,7 @@ def error_response(message, details=None, status_code=status.HTTP_400_BAD_REQUES
 # 페이지네이션
 class CustomPageNumberPagination(PageNumberPagination):
     page_size = 10  # 기본 페이지 크기
-    page_size_query_param = 'size'  # 클라이언트가 요청
+    page_size_query_param = 'size'  # 요청
     page_query_param = 'page'  # 페이지 번호
     max_page_size = 100  # 최대 페이지 크기 제한
 
@@ -40,49 +37,40 @@ class CustomPageNumberPagination(PageNumberPagination):
             "data": data
         })
 
+# 직렬화 반환
+def get_serialized_response(queryset, request, serializer_class):
+    paginator = CustomPageNumberPagination()
+    paginated_queryset = paginator.paginate_queryset(queryset, request)
+    serializer = serializer_class(paginated_queryset, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
 # PR 리뷰 전체조회
 class PRReviewListView(APIView):
     def get(self, request):
-        user_id = request.query_params.get('user_id') # request.user.id 사용??
-        queryset = filter_pr_reviews(user_id=user_id)
-
-        if not queryset.exists():
+        queryset = filter_pr_reviews(request.query_params.get('user_id')) # request.user.id 사용??
+        if not queryset:
             return success_response({"data": {}})
-            # return error_response("PR 리뷰가 없습니다.", status_code=status.HTTP_404_NOT_FOUND)
 
-        paginator = CustomPageNumberPagination()
-        paginated_queryset = paginator.paginate_queryset(queryset, request)
-        serializer = PRReviewSerializer(paginated_queryset, many=True)
-
-        return paginator.get_paginated_response(serializer.data)
+        return get_serialized_response(queryset, request, PRReviewSerializer)
 
 # PR 리뷰 검색
 class PRReviewSearchView(APIView):
     def get(self, request):
-        user_id = request.query_params.get('user_id')
         title = request.query_params.get('title', '').strip()
-
         if not title:
             return error_response("검색어를 입력해주세요.", status_code=status.HTTP_400_BAD_REQUEST)
 
-        queryset = filter_pr_reviews(user_id=user_id, query=title)
-
-        if not queryset.exists():
+        queryset = filter_pr_reviews(request.query_params.get('user_id')).filter(title__icontains=title)
+        if not queryset:
             return success_response({"data": {}})
 
-        paginator = CustomPageNumberPagination()
-        paginated_queryset = paginator.paginate_queryset(queryset, request)
-        serializer = PRReviewSerializer(paginated_queryset, many=True)
-
-        return paginator.get_paginated_response(serializer.data)
+        return get_serialized_response(queryset, request, PRReviewSerializer)
 
 # 최신 7개 PR 평균 등급 조회
 class PRReviewAverageGradeView(APIView):
     def get(self, request):
-        user_id = request.query_params.get('user_id')
-        queryset = filter_pr_reviews(user_id=user_id).order_by('-id')[:7]
-
-        if not queryset.exists():
+        queryset = filter_pr_reviews(request.query_params.get('user_id')).order_by('-id')[:7]
+        if not queryset:
             return success_response({"data": {}})
 
         serialized_data = [
@@ -100,11 +88,8 @@ class PRReviewAverageGradeView(APIView):
 # 최신 10개 문제 유형 조회
 class PRReviewTroubleTypeView(APIView):
     def get(self, request):
-        user_id = request.query_params.get('user_id')
-        # 문제 유형이 null이 아닌 경우만 가져옴
-        queryset = filter_pr_reviews(user_id=user_id).exclude(problem_type__isnull=True).order_by('-id')[:10]
-
-        if not queryset.exists():
+        queryset = filter_pr_reviews(request.query_params.get('user_id')).exclude(problem_type__isnull=True).order_by('-id')[:10]
+        if not queryset:
             return success_response({"data": {}})
 
         problem_types = queryset.values_list('problem_type', flat=True)
@@ -115,10 +100,8 @@ class PRReviewTroubleTypeView(APIView):
 # 전체 PR 모드 카테고리 통계 조회
 class PRReviewCategoryStatisticsView(APIView):
     def get(self, request):
-        user_id = request.query_params.get('user_id')
-        queryset = filter_pr_reviews(user_id=user_id)
-
-        if not queryset.exists():
+        queryset = filter_pr_reviews(request.query_params.get('user_id'))
+        if not queryset:
             return success_response({"data": {}})
 
         review_modes = queryset.values_list('review_mode', flat=True)
