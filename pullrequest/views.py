@@ -106,6 +106,6 @@ class PRReviewCategoryStatisticsView(APIView):
         if not queryset:
             return success_response({"statistics": {}})
 
-        review_mode_count = queryset.values('review_mode').annotate(count=Count('review_mode')).order_by('-count')
+        review_mode_count = list(queryset.values('review_mode').annotate(count=Count('review_mode')).order_by('-count'))
 
         return success_response({"statistics": {item['review_mode']: item['count'] for item in review_mode_count}})
