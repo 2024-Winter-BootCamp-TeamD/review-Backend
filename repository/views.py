@@ -4,9 +4,13 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.views import APIView
 
-from .models import Repository
+import user
+from .models import Repository, User
+
 from .serializers import RepositorySerializer
+from .webhooks.controlWebhook import createWebhook, deactivateWebhook ,activateWebhook
 
 
 @api_view(['GET'])
@@ -40,3 +44,107 @@ def get_repositories(request):
     response_data = {"repositories": serializer.data}
 
     return Response(response_data, status=status.HTTP_200_OK)
+
+
+
+
+class ApplyRepositoryView(APIView):
+    def post(self, request):
+        data = request.data
+        repositories = data.get("repositories")
+        is_apply = data.get("is_apply")
+
+        if not isinstance(is_apply, bool):
+            return Response({"error": "is_apply는 boolean이어야 합니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # repository_id와 repositories 배열 간 충돌 처리
+
+        # 2) 데이터베이스 업데이트
+        qs = Repository.objects.filter(id__in=repositories)
+        updated_count = qs.update(is_apply=is_apply)
+
+
+        """if is_apply==False:
+            for repo in qs:
+                repo_user = User.objects.get(id=repo.user_id.id)
+                result = deactivateWebhook(
+                    organization=repo.organization,
+                    repo_name=repo.name,
+                    access_token=repo_user.access_token,
+                    hook_id=repo.hook_id,
+                    repo_id=repo.id
+                )
+                return Response(
+                    {
+                        "id": repo.id, "message": result["message"]
+                    }
+                )"""
+
+        if is_apply:
+            results = []  # 성공 결과 저장
+            failed_repos = []  # 실패한 repo 저장
+            create_results=[]
+            failed_results=[]
+
+            for repo in qs:
+                repo_user = User.objects.get(id=repo.user_id.id)
+                # 웹훅 생성 호출
+                print(repo_user.access_token)
+                result = createWebhook(
+                    organization=repo.organization,
+                    repo_name=repo.name,
+                    access_token=repo_user.access_token,
+                    repo_id=repo.id
+                )
+                if result["status"] == "success":
+                    results.append({"id": repo.id, "message": result["message"]})
+                    # 웹훅 ID 저장
+                    repo.hook_id = result["data"]["id"]
+                    repo.save()
+                else:
+                    failed_repos.append({"id": repo.id, "error": result["message"]})
+                    continue
+
+                result = activateWebhook(
+                    organization=repo.organization,
+                    repo_name=repo.name,
+                    access_token=repo_user.access_token,
+                    hook_id=repo.hook_id,
+                    repo_id=repo.id
+                )
+                if result["status"] == "success":
+                    create_results.append({"id": repo.id, "message": result["message"]})
+                else:
+                    failed_results.append({"id": repo.id, "error": result["message"]})
+            return Response(
+                {
+                    "webhook_creation": {
+                        "success": results,
+                        "failed": failed_repos,
+                    },
+                    "webhook_activation": {
+                        "success": create_results,
+                        "failed": failed_results,
+                    },
+                }
+            )
+
+            """if is_apply==False:
+            for repo in qs:
+                result=deactivateWebhook(
+                    organization=repo.organization,
+                    repo_name=repo.name,
+                    access_token=User.access_token,
+                    hook_id=repo.hook_id,
+                    repo_id=repo.id
+                )
+                return Response(
+                    {
+                        "id": repo.id, "message": result["message"]
+                    }
+                )"""
+
+
+            # 4) 응답 반환
+
+
