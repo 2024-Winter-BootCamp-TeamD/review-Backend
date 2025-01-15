@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     'oauth',
     'partreview',
     'rest_framework',
-    'review'
+    'review',
 ]
 
 SITE_ID = 1
@@ -113,14 +113,14 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.getenv('MYSQL_DATABASE'),  # .env에서 데이터베이스 이름 가져오기
         # 도커로 실행할 때
-        #'USER': os.getenv('MYSQL_USER'),      # .env에서 사용자 이름 가져오기
-        #'PASSWORD': os.getenv('MYSQL_PASSWORD'),  # .env에서 비밀번호 가져오기
-        #'HOST': 'mysqldb',
+        'USER': os.getenv('MYSQL_USER'),      # .env에서 사용자 이름 가져오기
+        'PASSWORD': os.getenv('MYSQL_PASSWORD'),  # .env에서 비밀번호 가져오기
+        'HOST': 'mysqldb',
 
         # 로컬에서 실행할 때
-        'USER': os.getenv("MYSQL_ROOT_USER"),      # .env에서 사용자 이름 가져오기
-        'PASSWORD': os.getenv('MYSQL_ROOT_PASSWORD'),  # .env에서 비밀번호 가져오기
-        'HOST': 'localhost',
+        #'USER': os.getenv("MYSQL_ROOT_USER"),      # .env에서 사용자 이름 가져오기
+        #'PASSWORD': os.getenv('MYSQL_ROOT_PASSWORD'),  # .env에서 비밀번호 가져오기
+        #'HOST': 'localhost',
 
 
         'PORT': '3306',  # MySQL 기본 포트
