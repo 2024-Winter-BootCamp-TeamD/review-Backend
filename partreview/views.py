@@ -1,11 +1,16 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+""""
+<<<<<<< Updated upstream
 from user.models import User
 from django.http import StreamingHttpResponse
 import time
 import requests
 from django.conf import settings
+======"""
+from .models import CodeReview
+from user.models import User
 
 class PartReviewView(APIView):
     def post(self, request):

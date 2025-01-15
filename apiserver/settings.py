@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     'oauth',
     'partreview',
     'rest_framework',
-    'review'
+    'review',
 ]
 
 SITE_ID = 1
