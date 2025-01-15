@@ -7,11 +7,8 @@ from .models import PRReview
 from .serializers import PRReviewSerializer
 
 # 삭제된 유저, 리뷰 필터링 로직
-def get_active_pr_reviews(user_id=None, query=None):
-    # user__is_deleted 검사하는 부분은 필요 없어 보이지만 보안을 위해 넣어둠
-    queryset = PRReview.objects.filter(is_deleted=False, user__is_deleted=False)
-    if user_id:
-        queryset = queryset.filter(user_id=user_id)
+def filter_pr_reviews(user_id, query=None):
+    queryset = PRReview.objects.filter(is_deleted=False, user_id=user_id)
     if query:
         queryset = queryset.filter(title__icontains=query)
     return queryset
@@ -47,7 +44,7 @@ class CustomPageNumberPagination(PageNumberPagination):
 class PRReviewListView(APIView):
     def get(self, request):
         user_id = request.query_params.get('user_id') # request.user.id 사용??
-        queryset = get_active_pr_reviews(user_id=user_id)
+        queryset = filter_pr_reviews(user_id=user_id)
 
         if not queryset.exists():
             return success_response({"data": {}})
@@ -68,7 +65,7 @@ class PRReviewSearchView(APIView):
         if not title:
             return error_response("검색어를 입력해주세요.", status_code=status.HTTP_400_BAD_REQUEST)
 
-        queryset = get_active_pr_reviews(user_id=user_id, query=title)
+        queryset = filter_pr_reviews(user_id=user_id, query=title)
 
         if not queryset.exists():
             return success_response({"data": {}})
@@ -83,7 +80,7 @@ class PRReviewSearchView(APIView):
 class PRReviewAverageGradeView(APIView):
     def get(self, request):
         user_id = request.query_params.get('user_id')
-        queryset = get_active_pr_reviews(user_id=user_id).order_by('-id')[:7]
+        queryset = filter_pr_reviews(user_id=user_id).order_by('-id')[:7]
 
         if not queryset.exists():
             return success_response({"data": {}})
@@ -105,7 +102,7 @@ class PRReviewTroubleTypeView(APIView):
     def get(self, request):
         user_id = request.query_params.get('user_id')
         # 문제 유형이 null이 아닌 경우만 가져옴
-        queryset = get_active_pr_reviews(user_id=user_id).exclude(problem_type__isnull=True).order_by('-id')[:10]
+        queryset = filter_pr_reviews(user_id=user_id).exclude(problem_type__isnull=True).order_by('-id')[:10]
 
         if not queryset.exists():
             return success_response({"data": {}})
@@ -119,7 +116,7 @@ class PRReviewTroubleTypeView(APIView):
 class PRReviewCategoryStatisticsView(APIView):
     def get(self, request):
         user_id = request.query_params.get('user_id')
-        queryset = get_active_pr_reviews(user_id=user_id)
+        queryset = filter_pr_reviews(user_id=user_id)
 
         if not queryset.exists():
             return success_response({"data": {}})
