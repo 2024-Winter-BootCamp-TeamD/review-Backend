@@ -33,3 +33,4 @@ class ReportPrReview(models.Model):
 
     def __str__(self):
         return f"Report {self.report.report_id} - PR {self.pr_review.id}"
+

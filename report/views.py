@@ -109,6 +109,28 @@ class ReportDetailAPIView(APIView):
             logger.error(f"특정 보고서 조회 중 오류 발생: {e}")
             return Response({"error_message": f"보고서 조회 실패: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class ReportDeleteAPIView(APIView):
+    def delete(self, request, report_id):
+        try:
+            # 삭제 대상 보고서 조회
+            report = Report.objects.filter(report_id=report_id).first()
+
+            if not report:
+                # 대상 보고서가 없을 경우 404 응답 반환
+                return Response({"error_message": "삭제 대상 보고서 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+            # 보고서 삭제 처리
+            report.is_deleted = True
+            report.save()
+
+            # 성공 응답 반환
+            return Response({"message": "보고서 삭제에 성공했습니다"}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            # 삭제 중 오류 발생 시 에러 로그 기록 및 400 응답 반환
+            logger.error(f"{report_id} 보고서 삭제 중 오류 발생: {e}")
+            return Response({"error_message": f"{report_id} 보고서 삭제 실패"}, status=status.HTTP_400_BAD_REQUEST)
+
 class ReportDownloadAPIView(APIView):
     def get(self, request, report_id):
         try:
@@ -144,3 +166,4 @@ class ReportModeAPIView(APIView):
         except Exception as e:
             logger.error(f"Error fetching report modes: {e}")
             return Response({"error": "An unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

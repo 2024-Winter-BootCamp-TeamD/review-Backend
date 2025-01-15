@@ -28,3 +28,4 @@ urlpatterns = [
     path('api/', include('report.urls')), # 보고서 엔드포인트
     path('api/v1/', include('repository.urls')),  # 레포지토리 엔드포인트
 ]
+
