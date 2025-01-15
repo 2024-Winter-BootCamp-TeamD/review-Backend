@@ -166,3 +166,4 @@ class ReportModeAPIView(APIView):
         except Exception as e:
             logger.error(f"Error fetching report modes: {e}")
             return Response({"error": "An unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

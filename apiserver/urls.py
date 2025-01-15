@@ -20,10 +20,12 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('pullrequest.urls')),  # API 엔드포인트 연결
+    path('api/', include('pullrequest.urls')),  # 풀리퀘스트 엔드포인트
     path('api/', include('user.urls')),  # 사용자 엔드포인트
     path('api/v1/', include('oauth.urls')),
     path('', include('review.urls')),
     path('api/', include('partreview.urls')), # 드래그 코드 엔드포인트
     path('api/', include('report.urls')), # 보고서 엔드포인트
+    path('api/v1/', include('repository.urls')),  # 레포지토리 엔드포인트
 ]
+
