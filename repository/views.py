@@ -133,8 +133,131 @@ class ApplyRepositoryView(APIView):
             )
 
 
+@api_view(['GET'])
+def get_acitve(request):
+    user_id = request.query_params.get('user_id')
+
+    # 1) user_id가 없는 경우 처리
+    if not user_id:
+        return Response(
+            {"error_message": "사용자 ID를 입력하세요."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        # 2) 해당 사용자의 is_apply=True인 레포지토리 조회
+        repositories = Repository.objects.filter(user_id=user_id, is_apply=True)
+
+        # 3) 레포지토리가 없는 경우 처리
+        if not repositories.exists():
+            return Response(
+                {"repositories": []},
+                status=status.HTTP_200_OK
+            )
+
+        # 4) 레포지토리 데이터를 JSON 형식으로 변환
+        repositories_data = [
+            {
+                "id": repo.id,
+                "user_id": repo.user_id.id,
+                "organization": repo.organization,
+                "name": repo.name,
+                "repo_image": repo.repository_image,
+                "is_apply": repo.is_apply
+            }
+            for repo in repositories
+        ]
+
+        return Response({"repositories": repositories_data}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response(
+            {"error_message": f"기능 적용 레포지토리 조회 실패: {str(e)}"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
-            # 4) 응답 반환
 
+
+@api_view(['GET'])
+def get_inacitve(request):
+    user_id = request.query_params.get('user_id')
+
+    # 1) user_id가 없는 경우 처리
+    if not user_id:
+        return Response(
+            {"error_message": "사용자 ID를 입력하세요."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        # 2) 해당 사용자의 is_apply=False인 레포지토리 조회
+        repositories = Repository.objects.filter(user_id=user_id, is_apply=False)
+
+        # 3) 레포지토리가 없는 경우 처리
+        if not repositories.exists():
+            return Response(
+                {"repositories": []},
+                status=status.HTTP_200_OK
+            )
+
+        # 4) 레포지토리 데이터를 JSON 형식으로 변환
+        repositories_data = [
+            {
+                "id": repo.id,
+                "user_id": repo.user_id.id,
+                "organization": repo.organization,
+                "name": repo.name,
+                "repo_image": repo.repository_image,
+                "is_apply": repo.is_apply
+            }
+            for repo in repositories
+        ]
+
+        return Response({"repositories": repositories_data}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response(
+            {"error_message": f"기능 적용 레포지토리 조회 실패: {str(e)}"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+@api_view(['GET'])
+def get_search(request):
+        user_id = request.query_params.get('user_id')
+        search_query = request.query_params.get('search_query', "")
+        is_apply_str = request.query_params.get('is_apply', "").lower()  # "true"
+
+        # 1) user_id 검증
+        if not user_id:
+            return Response({"error_message": "user_id가 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # 2) 기본 쿼리: 사용자 ID로 필터링
+            qs = Repository.objects.filter(user_id=user_id)
+
+            # 3) 검색어(search_query)로 이름 부분 검색
+            if search_query:
+                qs = qs.filter(name__icontains=search_query)
+
+            # 4) is_apply=true/false 처리
+            if is_apply_str == "true":
+                qs = qs.filter(is_apply=True)
+
+            repositories_data = [
+            {
+                "id": repo.id,
+                "user_id": repo.user_id.id,
+                "organization": repo.organization,
+                "name": repo.name,
+                "repo_image": repo.repository_image,
+                "is_apply": repo.is_apply
+            }
+                for repo in qs
+                ]
+            return Response({"repositories": repositories_data}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error_message": f"기능 적용 레포지토리 조회 실패: {str(e)}"},status=status.HTTP_400_BAD_REQUEST)
 
