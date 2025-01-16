@@ -30,6 +30,8 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry config virtualenvs.create false \
     && poetry install --only main --no-interaction --no-ansi --no-root
 
+RUN pip install drf-yasg
+
 # 애플리케이션 소스코드 복사
 COPY . .
 
