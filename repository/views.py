@@ -260,3 +260,4 @@ def get_search(request):
 
         except Exception as e:
             return Response({"error_message": f"기능 적용 레포지토리 조회 실패: {str(e)}"},status=status.HTTP_400_BAD_REQUEST)
+
