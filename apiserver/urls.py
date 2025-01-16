@@ -16,6 +16,21 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="Review API",
+        default_version='v1',
+        description="Review API",
+        terms_of_service="",
+        license=openapi.License(name=""),
+    ),
+    public=True,
+    permission_classes=[permissions.AllowAny],
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,5 +41,6 @@ urlpatterns = [
     path('api/', include('partreview.urls')), # 드래그 코드 엔드포인트
     path('api/', include('report.urls')), # 보고서 엔드포인트
     path('api/v1/', include('repository.urls')),  # 레포지토리 엔드포인트
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger')
 ]
 

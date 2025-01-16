@@ -1,14 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-""""
-<<<<<<< Updated upstream
 from user.models import User
 from django.http import StreamingHttpResponse
 import time
 import requests
 from django.conf import settings
-======"""
 from .models import CodeReview
 from user.models import User
 
@@ -28,14 +25,14 @@ class PartReviewView(APIView):
 
         def event_stream():
             try:
-                yield f"codify: Review start. Mode: {review_mode}\n\n"
+                yield f"Refactory: Review start. Mode: {review_mode}\n\n"
                 time.sleep(1)
 
                 review_result = call_deepseek_api(code_snippet, review_mode)
-                yield f"codify: Review result: {review_result}\n\n"
+                yield f"Refactory: Review result: {review_result}\n\n"
                 time.sleep(1)
 
-                yield f"codify: Review completed.\n\n"
+                yield f"Refactory: Review completed.\n\n"
 
             except Exception as e:
                 yield f"data: {{\"error\": \"{str(e)}\"}}\n\n"
