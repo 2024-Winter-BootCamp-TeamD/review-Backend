@@ -16,6 +16,7 @@ from .utils.prReview import get_pr_review
 # 리뷰 대상 파일 확장자
 SUPPORTED_EXTENSIONS = {".py", ".java", ".jsx", ".js"}
 
+
 # 리팩토링 요소 정리
 ## 비동기 처리 구현
 ## 비동기 처리 구현 이후 웹훅에는 수신 응답 빠르게 반환해야 함

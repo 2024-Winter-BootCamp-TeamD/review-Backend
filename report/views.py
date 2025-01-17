@@ -6,15 +6,8 @@ from django.utils.timezone import now
 from .models import Report, ReportPrReview
 from pullrequest.models import PRReview
 from django.core.paginator import Paginator
-import os
-from dotenv import load_dotenv
-import requests
 
-load_dotenv()
 logger = logging.getLogger(__name__)
-
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
-DEEPSEEK_API_URL = os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com")
 
 class UserReportAPIView(APIView):
     def get(self, request, user_id):
@@ -48,30 +41,6 @@ class UserReportAPIView(APIView):
             logger.error(f"보고서 목록 조회 중 오류 발생: {e}")
             return Response({"error_message": "보고서 목록 조회 실패"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @staticmethod
-    def generate_report_with_deepseek(title, pr_reviews):
-
-        prompt = f"""
-        여기에다가 프롬프트를 작성해 주세요~
-           """
-
-        headers = {
-            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-            "Content-Type": "application/json",
-            }
-        payload = {
-            "model": "deepseek-chat",
-            "messages": [{"role": "system", "content": prompt}],
-            "stream": False,
-        }
-
-        response = requests.post(f"{DEEPSEEK_API_URL}", json=payload, headers=headers)
-
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception(f"DeepSeek API 호출 실패: {response.status_code}, {response.text}")
-
     def post(self, request, user_id):
         try:
             report_title = request.data.get('report_title')
@@ -92,44 +61,17 @@ class UserReportAPIView(APIView):
             total_reviews = sum([1 for pr in prs if pr.total_review])  # PR 리뷰 개수
 
             # 보고서 생성
-            pr_reviews = [
-                {
-                    "title": pr.title,
-                    "pr_url": pr.pr_url,
-                    "aver_grade": pr.aver_grade,
-                    "problem_type": pr.problem_type,
-                    "review_mode": pr.review_mode,
-                    "total_review": pr.total_review,
-                }
-                for pr in prs
-            ]
-
-            # 딥시크 API 호출
-            deepseek_result = self.generate_report_with_deepseek(report_title, pr_reviews)
-            summary = deepseek_result.get("summary", "요약 없음")
-            improvements = deepseek_result.get("improvements", "개선점 없음")
-            evaluation = deepseek_result.get("evaluation", "평가 없음")
-            score = deepseek_result.get("score", "N/A")
-
-            # 보고서 내용
-            report_content = f"""
-                    요약: {summary}
-                    개선점: {improvements}
-                    평가: {evaluation}
-                    점수: {score}
-                    """
-
+            report_content = f"이 보고서는 선택한 PR 리뷰 결과를 기반으로 작성되었습니다."
             report = Report.objects.create(
                 user_id=user_id,
                 title=report_title,
                 content=report_content,
                 pdf_url=f"http://example.com/report/{now().timestamp()}.pdf",
-                review_num=len(pr_reviews),
+                review_num=total_reviews,
                 created_at=now(),
                 updated_at=now()
             )
 
-            # PR과 보고서 연결
             for pr in prs:
                 ReportPrReview.objects.create(report=report, pr_review=pr)
 
@@ -139,7 +81,7 @@ class UserReportAPIView(APIView):
                 "title": report.title,
                 "content": report.content,
                 "pdf_url": report.pdf_url,
-                "review_num": len(pr_reviews),
+                "review_num": total_reviews,
                 "created_at": report.created_at.isoformat()
             }, status=status.HTTP_201_CREATED)
 
