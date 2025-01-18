@@ -150,6 +150,9 @@ DATABASES = {
         'HOST': 'localhost',
 
         'PORT': '3306',  # MySQL 기본 포트
+        'OPTIONS': {
+            'charset': 'utf8mb4',  # 문자 인코딩 설정
+        },
     }
 }
 
