@@ -148,17 +148,45 @@ class PRReviewAllAverageGradeView(APIView):
 
         return Response({"data": results})
 
+# 문제 유형 대분류 매핑
+PROBLEM_TYPE_CATEGORIES = {
+    "Convention": "clean",
+    "Reusability": "clean",
+    "SRP": "clean",  # Single Responsibility Principle
+    "Encapsulation": "clean",
+    "Time": "optimize",  # Time Complexity
+    "Space": "optimize",  # Space Complexity
+    "Algorithm": "optimize",
+    "DataStructure": "optimize",
+}
+
 # 최신 10개 문제 유형 조회
 class PRReviewTroubleTypeView(APIView):
     def get(self, request):
-        queryset = filter_pr_reviews(request.query_params.get('user_id')).exclude(problem_type__isnull=True).order_by('-id')[:10]
+        queryset = (
+            filter_pr_reviews(request.query_params.get('user_id'))
+            .exclude(problem_type__isnull=True)
+            .exclude(problem_type="")
+            .exclude(problem_type__regex=r"^\s+$")  # 공백 문자열 제거
+            .order_by('-id')[:10]
+        )
         if not queryset:
             return success_response({"data": {}})
 
-        problem_types = queryset.values_list('problem_type', flat=True)
+        problem_types = list(queryset.values_list('problem_type', flat=True))
         problem_type_count = Counter(problem_types)
 
-        return success_response({"data": problem_type_count})
+        # 대분류 추가하여 결과 가공
+        result = [
+            {
+                "problem_type": problem_type,
+                "count": count,
+                "category": PROBLEM_TYPE_CATEGORIES.get(problem_type, "unknown")
+            }
+            for problem_type, count in problem_type_count.items()
+        ]
+
+        return success_response({"data": result})
 
 # 전체 PR 모드 카테고리 통계 조회
 class PRReviewCategoryStatisticsView(APIView):
