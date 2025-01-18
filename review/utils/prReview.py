@@ -21,7 +21,7 @@ def get_pr_review(review, aver_grade, review_mode="clean"):
 
         # 프롬프트 가져오기
         prompt = CLEAN_PROMPT.format(review=review, aver_grade=aver_grade)
-        print(f"Generated Prompt")
+        print(f"Generated PR review Prompt")
 
         # OpenAI API 호출
         response = client.chat.completions.create(
