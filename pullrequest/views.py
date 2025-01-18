@@ -1,6 +1,7 @@
 from collections import Counter
-
-from django.db.models import Count
+from django.db.models import Count, Sum
+from django.db.models.expressions import Case, When
+from django.db.models.fields import IntegerField
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
@@ -69,7 +70,7 @@ class PRReviewSearchView(APIView):
         return get_serialized_response(queryset, request, PRReviewSerializer)
 
 # 최신 7개 PR 평균 등급 조회
-class PRReviewAverageGradeView(APIView):
+class PRReviewRecentAverageGradeView(APIView):
     def get(self, request):
         queryset = filter_pr_reviews(request.query_params.get('user_id')).order_by('-id')[:7]
         if not queryset:
@@ -86,6 +87,66 @@ class PRReviewAverageGradeView(APIView):
         ]
 
         return success_response({"data": serialized_data})
+
+def map_grade_to_string(average):
+    if 91 <= average <= 100:
+        return "S"
+    elif 71 <= average <= 90:
+        return "A"
+    elif 51 <= average <= 70:
+        return "B"
+    elif 31 <= average <= 50:
+        return "C"
+    elif 0 <= average <= 30:
+        return "D"
+    return "Invalid"
+'''
+def map_string_to_average(grade):
+    grade_to_average = {
+        "S": 95,
+        "A": 80,
+        "B": 60,
+        "C": 40,
+        "D": 15,
+    }
+    return grade_to_average.get(grade, "Invalid")
+'''
+
+# 전체 기간 일별 PR 평균 등급 조회
+class PRReviewAllAverageGradeView(APIView):
+    def get(self, request):
+        queryset = filter_pr_reviews(request.query_params.get('user_id'))
+        if not queryset:
+            return success_response({"data": {}})
+
+        queryset_by_date = queryset.values("created_at__date")
+
+        annotated_queryset = queryset_by_date.annotate(
+            count=Count("id"),
+            grade_sum=Sum(
+                Case(
+            When(aver_grade="S", then=95),
+                    When(aver_grade="A", then=80),
+                    When(aver_grade="B", then=60),
+                    When(aver_grade="C", then=40),
+                    When(aver_grade="D", then=15),
+                    default=0,
+                    output_field=IntegerField(),
+                )
+            ),
+        )
+
+        daily_averages = list(annotated_queryset.order_by("created_at__date"))
+
+        results = [
+            {
+                "date": entry["created_at__date"].strftime("%Y-%m-%d"),
+                "average_grade": map_grade_to_string(round(entry["grade_sum"] / entry["count"], 2)),
+            }
+            for entry in daily_averages
+        ]
+
+        return Response({"data": results})
 
 # 최신 10개 문제 유형 조회
 class PRReviewTroubleTypeView(APIView):
