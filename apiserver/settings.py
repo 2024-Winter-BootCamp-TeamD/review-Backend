@@ -31,7 +31,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',  # 로컬 개발
     'localhost',  # 로컬 개발
     '374d-175-210-241-78.ngrok-free.app',  # ngrok 도메인 추가
-    '2596-61-255-49-90.ngrok-free.app',
+    '8442-221-151-106-114.ngrok-free.app',
 ]
 
 
@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'review',
     'drf_yasg',
+    'django_celery_results',
 ]
 
 SITE_ID = 1
