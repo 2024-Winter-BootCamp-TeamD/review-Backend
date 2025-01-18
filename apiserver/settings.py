@@ -179,10 +179,3 @@ REST_FRAMEWORK = {
 
 DEEPSEEK_API_URL = os.getenv("DEEPSEEK_API_URL", 'https://api.deepseek.com')
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
-
-# Celery 메세지 브로커 설정
-# Celery 설정
-CELERY_BROKER_URL = 'amqp://guest:guest@rabbitmq:5672//'
-CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
-CELERY_TIMEZONE = 'Asia/Seoul'
-CELERY_ENABLE_UTC = False
