@@ -28,6 +28,8 @@ SECRET_KEY = 'django-insecure-$z%bvmvvn__!qzdmta5j&v#jv#^09o^p)!bzwp1-q_hg@ec26b
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    '0.0.0.0',
+    'django',
     '127.0.0.1',  # 로컬 개발
     'localhost',  # 로컬 개발
     '374d-175-210-241-78.ngrok-free.app',  # ngrok 도메인 추가
@@ -58,7 +60,30 @@ INSTALLED_APPS = [
     'review',
     'drf_yasg',
     'django_celery_results',
+    'corsheaders'
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://0.0.0.0:8000",
+    "http://localhost",
+    "http://localhost:5173",
+    "http://django:8000"
+]
+
+CORS_ALLOW_HEADERS = [
+    'authorization',
+    'x-password',
+    'content-type',
+    'x-csrftoken',
+    'accept',
+    'origin',
+    'user-agent',
+    'access-control-allow-origin',
+]
+
+
 
 SITE_ID = 1
 
@@ -68,6 +93,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -185,5 +211,12 @@ DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 # Celery 설정
 CELERY_BROKER_URL = 'amqp://guest:guest@rabbitmq:5672//'
 CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Seoul'
 CELERY_ENABLE_UTC = False
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+    'http://localhost',
+]
