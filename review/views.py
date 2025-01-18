@@ -226,16 +226,40 @@ def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/vnd.github.v3+json"
     }
-    total_review_match = re.search(r'"total_review":\s*"([^"]*)"', pr_review_result)
-    total_review_text = total_review_match.group(1) if total_review_match else "총평 생성 실패."
 
-    data = {"body": total_review_text}
-    response = requests.post(url, headers=headers, json=data)
-    if response.status_code == 201:
-        print("PR에 총평 댓글이 성공적으로 작성되었습니다.")
-    else:
-        print(f"Failed to post summary comment: {response.status_code}, {response.json()}")
-    return total_review_text
+    try:
+        # 응답 데이터 클린업
+        # 백틱(```)과 첫 줄에 포함된 "json" 제거
+        clean_result = pr_review_result.strip("```").strip()
+        if clean_result.startswith("json"):
+            clean_result = clean_result.split("\n", 1)[1].strip()  # 첫 줄 제거
+
+        print(f"Cleaned PR Review Result:\n{clean_result}")
+
+        # JSON 파싱
+        pr_review_data = json.loads(clean_result)
+
+        # `summary` 추출
+        total_review_text = pr_review_data.get("summary", "총평 생성 실패.")
+        print("Total Review Text:", total_review_text)
+
+        # GitHub API 요청 데이터 생성
+        data = {"body": total_review_text}
+        response = requests.post(url, headers=headers, json=data)
+
+        if response.status_code == 201:
+            print("PR에 총평 댓글이 성공적으로 작성되었습니다.")
+        else:
+            print(f"Failed to post summary comment: {response.status_code}, {response.text}")
+
+        return total_review_text
+
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse PR review result as JSON: {str(e)}")
+        return "총평 생성 실패."
+    except Exception as e:
+        print(f"Error in post_pr_summary_comment: {str(e)}")
+        return "총평 생성 실패."
 
 
 def get_problem_type(pr_review_result):
