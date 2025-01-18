@@ -149,7 +149,6 @@ DATABASES = {
         # 'PASSWORD': os.getenv('MYSQL_ROOT_PASSWORD'),  # .env에서 비밀번호 가져오기
         # 'HOST': 'localhost',
 
-
         'PORT': '3306',  # MySQL 기본 포트
     }
 }
