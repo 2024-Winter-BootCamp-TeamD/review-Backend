@@ -46,45 +46,8 @@ services:
         networks:
           - app-tier
 
-    redis:
-      image: "redis:latest"
-      ports:
-        - "6379:6379"
-      networks:
-        - app-tier
-      restart: always #연결용 재시작
-
-    rabbitmq:
-          image: "rabbitmq:3-management"
-          container_name: rabbitmq
-          env_file:
-            - .env
-          ports:
-            - "5672:5672"
-            - "15672:15672"
-          restart: always # 연결 끊어질시 다시 시작용
-          volumes:
-            - rabbitmq_data:/var/lib/rabbitmq
-          networks:
-            - app-tier
-
-    celery:
-          build: .
-          container_name: celery_worker
-          command: celery -A apiserver worker --loglevel=info --pool=prefork
-          env_file:
-            - .env
-          depends_on:
-            - rabbitmq
-            - redis
-            - mysqldb
-          volumes:
-            - './:/backend'
-          networks:
-            - app-tier
 volumes:
     mysqldata:  # 로컬 디렉토리를 지정했으므로, 익명 볼륨 제거 가능
-    rabbitmq_data:
 
 networks:
     app-tier:

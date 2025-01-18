@@ -30,6 +30,8 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry config virtualenvs.create false \
     && poetry install --only main --no-interaction --no-ansi --no-root
 
+RUN pip install drf-yasg
+
 # 애플리케이션 소스코드 복사
 COPY . .
 
@@ -38,7 +40,4 @@ ENV DJANGO_SETTINGS_MODULE=apiserver.settings
 
 # 포트 노출
 EXPOSE 8000
-
-# Celery 명령어를 기본 명령어로 설정합니다.
-CMD ["celery", "-A", "apiserver", "worker", "--loglevel=info"]
 
