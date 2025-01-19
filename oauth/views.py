@@ -89,7 +89,11 @@ class LoginGithubCallbackView(APIView):
                 organization=repo['owner']['login'],
                 name=repo['name'],
                 repository_image=repo['owner']['avatar_url'],
-                hook_id=repo.get('hook_id')
+                hook_id=repo.get('hook_id'),
+                language=repo['language'],
+                description=repo['description'],
+                visibility=repo['visibility'],
+                repo_updated_at=repo['updated_at']
             )
             repository.full_clean()
             repository.save()

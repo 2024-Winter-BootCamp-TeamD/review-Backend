@@ -163,7 +163,11 @@ def get_acitve(request):
                 "organization": repo.organization,
                 "name": repo.name,
                 "repo_image": repo.repository_image,
-                "is_apply": repo.is_apply
+                "is_apply": repo.is_apply,
+                "language": repo.language,
+                "description": repo.description,
+                "visibility": repo.visibility,
+                "repo_updated_at": repo.repo_updated_at
             }
             for repo in repositories
         ]
@@ -209,7 +213,11 @@ def get_inacitve(request):
                 "organization": repo.organization,
                 "name": repo.name,
                 "repo_image": repo.repository_image,
-                "is_apply": repo.is_apply
+                "is_apply": repo.is_apply,
+                "language": repo.language,
+                "description": repo.description,
+                "visibility": repo.visibility,
+                "repo_updated_at": repo.repo_updated_at
             }
             for repo in repositories
         ]
@@ -252,7 +260,11 @@ def get_search(request):
                 "organization": repo.organization,
                 "name": repo.name,
                 "repo_image": repo.repository_image,
-                "is_apply": repo.is_apply
+                "is_apply": repo.is_apply,
+                "language": repo.language,
+                "description": repo.description,
+                "visibility": repo.visibility,
+                "repo_updated_at": repo.repo_updated_at
             }
                 for repo in qs
                 ]

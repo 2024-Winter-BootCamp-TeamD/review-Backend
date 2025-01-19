@@ -16,7 +16,7 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+PDF_SAVE_PATH = os.path.join(BASE_DIR, "report", "reports")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -28,6 +28,8 @@ SECRET_KEY = 'django-insecure-$z%bvmvvn__!qzdmta5j&v#jv#^09o^p)!bzwp1-q_hg@ec26b
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    '0.0.0.0',
+    'django',
     '127.0.0.1',  # 로컬 개발
     'localhost',  # 로컬 개발
     '374d-175-210-241-78.ngrok-free.app',  # ngrok 도메인 추가
@@ -35,6 +37,7 @@ ALLOWED_HOSTS = [
     '435f-106-101-131-101.ngrok-free.app'
     '2596-61-255-49-90.ngrok-free.app',
     '435f-106-101-131-101.ngrok-free.app',
+    '8442-221-151-106-114.ngrok-free.app',
 ]
 
 
@@ -60,7 +63,30 @@ INSTALLED_APPS = [
     'rest_framework',
     'review',
     'drf_yasg',
+    'corsheaders'
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://0.0.0.0:8000",
+    "http://localhost",
+    "http://localhost:5173",
+    "http://django:8000"
+]
+
+CORS_ALLOW_HEADERS = [
+    'authorization',
+    'x-password',
+    'content-type',
+    'x-csrftoken',
+    'accept',
+    'origin',
+    'user-agent',
+    'access-control-allow-origin',
+]
+
+
 
 SITE_ID = 1
 
@@ -70,6 +96,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -127,6 +154,9 @@ DATABASES = {
         'HOST': 'localhost',
 
         'PORT': '3306',  # MySQL 기본 포트
+        'OPTIONS': {
+            'charset': 'utf8mb4',  # 문자 인코딩 설정
+        },
     }
 }
 
@@ -186,5 +216,12 @@ DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 # Celery 설정
 CELERY_BROKER_URL = 'amqp://guest:guest@rabbitmq:5672//'
 CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Seoul'
 CELERY_ENABLE_UTC = False
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+    'http://localhost',
+]

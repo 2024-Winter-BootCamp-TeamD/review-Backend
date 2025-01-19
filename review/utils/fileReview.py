@@ -22,7 +22,7 @@ def file_code_review(code, pr_id=None):
 
         # 프롬프트 가져오기
         prompt = CLEAN_PROMPT.format(review=code)
-        print(f"Generated Prompt:\n{prompt}")
+        print(f"Generated file review prompt")
 
         # OpenAI API 호출
         response = client.chat.completions.create(
@@ -33,6 +33,7 @@ def file_code_review(code, pr_id=None):
 
         # 응답 처리
         result = response.choices[0].message.content
+        print(f"file Review Response:\n{result}")
         return result
 
     except Exception as e:

@@ -13,6 +13,10 @@ class Repository(models.Model):
     organization = models.CharField(max_length=100, null=True)
     name = models.CharField(max_length=100)
     repository_image = models.URLField(max_length=200, blank=True, null=True)
+    language = models.CharField(max_length=20, blank=True, null=True)
+    description = models.CharField(max_length=255, blank=True, null=True, db_collation='utf8mb4_unicode_ci')
+    visibility = models.CharField(max_length=20)
+    repo_updated_at = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)  # 기본값 제거
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
