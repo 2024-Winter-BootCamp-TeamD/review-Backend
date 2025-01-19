@@ -1,20 +1,12 @@
 import json
-import os
-import re
-
-import requests
 from django.http import JsonResponse, HttpResponseBadRequest
-from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-
-from pullrequest.models import FileReview, PRReview
+from pullrequest.models import PRReview
 from repository.models import Repository
 from user.models import User
-from .utils.fileReview import file_code_review
-from .utils.prReview import get_pr_review
+from apiserver.tasks import async_process_pr_review, async_process_pr_code_only_review
 
-# 리뷰 대상 파일 확장자
-SUPPORTED_EXTENSIONS = {".py", ".java", ".jsx", ".js"}
+
 
 # 리팩토링 요소 정리
 ## 비동기 처리 구현
@@ -70,10 +62,9 @@ def github_webhook(request):
                     )
                     pr_review.full_clean()
                     pr_review.save()
-                    process_pr_code_review(pr_review, access_token, repo_name, pr_number, commit_id)
-
+                    async_process_pr_review.delay(pr_review.id, access_token, repo_name, pr_number, commit_id)
                 else:
-                    process_pr_code_only_review(access_token, repo_name, pr_number, commit_id)
+                    async_process_pr_code_only_review.delay(access_token, repo_name, pr_number, commit_id)
 
                 # 성공적인 응답 반환
                 return JsonResponse({
@@ -97,6 +88,9 @@ def github_webhook(request):
     return HttpResponseBadRequest("Invalid request method")
 
 
+
+
+'''
 def get_pr_files(access_token, repo_name, pr_number):
     """
     PR의 모든 파일 정보를 가져오는 함수
@@ -153,24 +147,6 @@ def post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path,
         print(f"Failed to post comment: {response.status_code}, {response.json()}")
 
 
-def get_grade(score):
-    if isinstance(score, (int, float)):  # 정수 또는 실수인지 확인
-        if 1 <= score < 3:
-            return "D"
-        elif 3 <= score < 5:
-            return "C"
-        elif 5 <= score < 7:
-            return "B"
-        elif 7 <= score < 9:
-            return "A"
-        elif 81 <= score <= 100:
-            return "S"
-        else:
-            return "Unknown"  # 1 미만 또는 10 초과인 경우
-    else:
-        return "Unknown"  # 정수 또는 실수가 아닌 경우
-
-
 def process_pr_code_review(pr_review, access_token, repo_name, pr_number, commit_id):
     """
     PR의 모든 파일에 대해 코드 리뷰를 수행하고, 결과를 PR에 댓글로 작성하는 함수
@@ -211,90 +187,6 @@ def process_pr_code_review(pr_review, access_token, repo_name, pr_number, commit
         print(f"Error in process_pr_code_review: {str(e)}")
 
 
-
-    except Exception as e:
-        print(f"Error in process_pr_code_review: {str(e)}")
-
-
-def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result):
-    """
-    PR 전체 리뷰를 댓글로 추가
-    """
-    GITHUB_API_URL = "https://api.github.com"
-    url = f"{GITHUB_API_URL}/repos/{repo_name}/issues/{pr_number}/comments"
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Accept": "application/vnd.github.v3+json"
-    }
-
-    try:
-        # 응답 데이터 클린업
-        # 백틱(```)과 첫 줄에 포함된 "json" 제거
-        clean_result = pr_review_result.strip("```").strip()
-        if clean_result.startswith("json"):
-            clean_result = clean_result.split("\n", 1)[1].strip()  # 첫 줄 제거
-
-        print(f"Cleaned PR Review Result:\n{clean_result}")
-
-        # JSON 파싱
-        pr_review_data = json.loads(clean_result)
-
-        # `summary` 추출
-        total_review_text = pr_review_data.get("summary", "총평 생성 실패.")
-        print("Total Review Text:", total_review_text)
-
-        # GitHub API 요청 데이터 생성
-        data = {"body": total_review_text}
-        response = requests.post(url, headers=headers, json=data)
-
-        if response.status_code == 201:
-            print("PR에 총평 댓글이 성공적으로 작성되었습니다.")
-        else:
-            print(f"Failed to post summary comment: {response.status_code}, {response.text}")
-
-        return total_review_text
-
-    except json.JSONDecodeError as e:
-        print(f"Failed to parse PR review result as JSON: {str(e)}")
-        return "총평 생성 실패."
-    except Exception as e:
-        print(f"Error in post_pr_summary_comment: {str(e)}")
-        return "총평 생성 실패."
-
-
-def get_problem_type(pr_review_result):
-    problem_type_match = re.search(r'"problem_type":\s*"([^"]*)"', pr_review_result)
-    print("problem_type:", problem_type_match.group(1))
-    return problem_type_match.group(1)
-
-
-def store_file_review(file_path, pr_review, review_result):
-    # review 부분 추출
-    review_match = re.search(r'"review":\s*"([\s\S]*?)"', review_result)
-    if review_match:
-        review_text = review_match.group(1)
-        print("Review:", review_text)
-    else:
-        review_text = ""  # review를 찾을 수 없는 경우 기본값
-    score_match = re.search(r'"score":\s*"(\d+)"', review_result)
-    if score_match:
-        score = int(score_match.group(1))  # 숫자로 변환
-    else:
-        score = 0  # score를 찾을 수 없는 경우 기본값
-    grade = get_grade(score)
-    file_review = FileReview(
-        pr_review=pr_review,
-        file_path=file_path,
-        comment=review_text,
-        grade=grade
-    )
-    print(f"Score: {score}, Grade: {grade}")  # 출력: Score: 7, Grade: A
-    file_review.full_clean()
-    file_review.save()
-
-    return review_text, score
-
-
 def process_pr_code_only_review(access_token, repo_name, pr_number, commit_id):
     """
     PR의 모든 파일에 대해 코드 리뷰를 수행하고, 결과를 PR에 댓글로 작성하는 함수
@@ -306,7 +198,7 @@ def process_pr_code_only_review(access_token, repo_name, pr_number, commit_id):
     gather_reviews = ""
     try:
         # PR의 모든 파일 가져오기
-        pr_files = get_pr_files(access_token, repo_name, pr_number)
+        pr_files = async_get_pr_files.delay(access_token, repo_name, pr_number)
 
         for file_info in pr_files:
             file_path = file_info["filename"]
@@ -320,7 +212,7 @@ def process_pr_code_only_review(access_token, repo_name, pr_number, commit_id):
                 file_num += 1
 
                 # 파일 내용 가져오기
-                file_content = download_file_content(file_info["raw_url"])
+                file_content = async_download_file_content.delay(file_info["raw_url"])
 
                 # 코드 리뷰 수행
                 review_result = file_code_review(file_content)
@@ -331,7 +223,7 @@ def process_pr_code_only_review(access_token, repo_name, pr_number, commit_id):
                 gather_reviews += review_text
 
                 # 리뷰 결과를 PR에 댓글로 추가
-                post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path, review_text)
+                async_post_comment_to_pr.delay(commit_id, access_token, repo_name, pr_number, file_path, review_text)
             else:
                 print(f"Skipping unsupported file: {file_path}")
 
@@ -351,24 +243,4 @@ def process_pr_code_only_review(access_token, repo_name, pr_number, commit_id):
             post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result)
     except Exception as e:
         print(f"Error in process_pr_code_review: {str(e)}")
-
-
-def get_score_review_text(file_path, review_result):
-    # review 부분 추출
-    review_match = re.search(r'"review":\s*"([\s\S]*?)"', review_result)
-    if review_match:
-        review_text = review_match.group(1)
-        print("Review:", review_text)
-    else:
-        review_text = ""  # review를 찾을 수 없는 경우 기본값
-    score_match = re.search(r'"score":\s*"(\d+)"', review_result)
-    if score_match:
-        score = int(score_match.group(1))  # 숫자로 변환
-    else:
-        score = 0  # score를 찾을 수 없는 경우 기본값
-
-    grade = get_grade(score)
-
-    print(f"Score: {score}, Grade: {grade}")  # 출력: Score: 7, Grade: A
-
-    return review_text, score
+'''
