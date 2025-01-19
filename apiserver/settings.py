@@ -34,6 +34,7 @@ ALLOWED_HOSTS = [
     'b6e8-175-210-241-78.ngrok-free.app',
     '435f-106-101-131-101.ngrok-free.app'
     '2596-61-255-49-90.ngrok-free.app',
+    '435f-106-101-131-101.ngrok-free.app',
 ]
 
 
