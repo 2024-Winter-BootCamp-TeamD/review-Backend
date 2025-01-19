@@ -31,12 +31,9 @@ ALLOWED_HOSTS = [
     '127.0.0.1',  # 로컬 개발
     'localhost',  # 로컬 개발
     '374d-175-210-241-78.ngrok-free.app',  # ngrok 도메인 추가
-<<<<<<< HEAD
     'b6e8-175-210-241-78.ngrok-free.app',
     '435f-106-101-131-101.ngrok-free.app'
-=======
     '2596-61-255-49-90.ngrok-free.app',
->>>>>>> develop
 ]
 
 
@@ -119,16 +116,6 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.getenv('MYSQL_DATABASE'),  # .env에서 데이터베이스 이름 가져오기
         #  도커로 실행할 때
-<<<<<<< HEAD
-        #'USER': os.getenv('MYSQL_USER'),      # .env에서 사용자 이름 가져오기
-        #'PASSWORD': os.getenv('MYSQL_PASSWORD'),  # .env에서 비밀번호 가져오기
-        #'HOST': 'mysqldb',
-
-        # 로컬에서 실행할 때
-         'USER': os.getenv("MYSQL_ROOT_USER"),      # .env에서 사용자 이름 가져오기
-         'PASSWORD': os.getenv('MYSQL_ROOT_PASSWORD'),  # .env에서 비밀번호 가져오기
-         'HOST': 'localhost',
-=======
         # 'USER': os.getenv('MYSQL_USER'),      # .env에서 사용자 이름 가져오기
         # 'PASSWORD': os.getenv('MYSQL_PASSWORD'),  # .env에서 비밀번호 가져오기
         # 'HOST': 'mysqldb',
@@ -137,8 +124,6 @@ DATABASES = {
         'USER': os.getenv("MYSQL_ROOT_USER"),      # .env에서 사용자 이름 가져오기
         'PASSWORD': os.getenv('MYSQL_ROOT_PASSWORD'),  # .env에서 비밀번호 가져오기
         'HOST': 'localhost',
->>>>>>> develop
-
 
         'PORT': '3306',  # MySQL 기본 포트
     }
