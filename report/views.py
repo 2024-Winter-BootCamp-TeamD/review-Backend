@@ -149,8 +149,8 @@ class UserReportAPIView(APIView):
 
         # DeepSeek API 요청
         headers = {
-            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
             "Content-Type": "application/json",
+            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
         }
         payload = {
             "model": "deepseek-chat",
@@ -159,7 +159,7 @@ class UserReportAPIView(APIView):
         }
 
         try:
-            response = requests.post(f"{DEEPSEEK_API_URL}", json=payload, headers=headers)
+            response = requests.post(DEEPSEEK_API_URL, json=payload, headers=headers)
             response.raise_for_status()
 
             response_data = response.json()
