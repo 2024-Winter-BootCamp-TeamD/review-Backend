@@ -74,6 +74,7 @@ def process_pr_code_review(pr_review_id, access_token, repo_name, pr_number, com
     """
     try:
         pr_review = PRReview.objects.get(id=pr_review_id)
+        review_mode = pr_review.review_mode
         # PR의 모든 파일 가져오기
         pr_files = get_pr_files(access_token, repo_name, pr_number)
 
@@ -117,7 +118,7 @@ def process_pr_code_review(pr_review_id, access_token, repo_name, pr_number, com
             print("gather_reviews:", gather_reviews)
 
             # 받은 모든 리뷰를 토대로 PR리뷰 받기
-            pr_review_result = get_pr_review(gather_reviews, aver_grade)
+            pr_review_result = get_pr_review(gather_reviews, aver_grade, review_mode)
 
             # pr에 총평 댓글로 남겨주는 함수 실행
             total_review = post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result)
