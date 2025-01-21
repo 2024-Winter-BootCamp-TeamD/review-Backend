@@ -16,7 +16,7 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+PDF_SAVE_PATH = os.path.join(BASE_DIR, "report", "reports")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -33,9 +33,11 @@ ALLOWED_HOSTS = [
     '127.0.0.1',  # 로컬 개발
     'localhost',  # 로컬 개발
     '374d-175-210-241-78.ngrok-free.app',  # ngrok 도메인 추가
-    '8fa2-221-151-106-114.ngrok-free.app',
+    "chrome-extension://flpheaheemmfidkdnokahgmfpehnldkn",  # 확장 프로그램의 origin
+
 ]
 
+CORS_ALLOW_CREDENTIALS = True  # credentials 허용
 
 # Application definition
 
@@ -63,12 +65,13 @@ INSTALLED_APPS = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
+    "chrome-extension://flpheaheemmfidkdnokahgmfpehnldkn",  # 확장 프로그램의 origin
     "http://localhost:8000",
     "http://127.0.0.1:8000",
     "http://0.0.0.0:8000",
     "http://localhost",
     "http://localhost:5173",
-    "http://django:8000"
+    "http://django:8000",
 ]
 
 CORS_ALLOW_HEADERS = [
@@ -82,7 +85,14 @@ CORS_ALLOW_HEADERS = [
     'access-control-allow-origin',
 ]
 
-
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 
 SITE_ID = 1
 
@@ -218,6 +228,7 @@ CELERY_TIMEZONE = 'Asia/Seoul'
 CELERY_ENABLE_UTC = False
 
 CSRF_TRUSTED_ORIGINS = [
+    "chrome-extension://flpheaheemmfidkdnokahgmfpehnldkn",  # 확장 프로그램의 origin
     'http://localhost:5173',
     'http://localhost',
     'http://localhost:8000',
