@@ -33,7 +33,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',  # 로컬 개발
     'localhost',  # 로컬 개발
     '374d-175-210-241-78.ngrok-free.app',  # ngrok 도메인 추가
-    '6420-221-151-106-114.ngrok-free.app',
+    '8fa2-221-151-106-114.ngrok-free.app',
 ]
 
 
@@ -220,4 +220,5 @@ CELERY_ENABLE_UTC = False
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost',
+    'http://localhost:8000',
 ]
