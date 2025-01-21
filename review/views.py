@@ -71,7 +71,7 @@ def github_webhook(request):
                     process_pr_code_review.delay(pr_review.id, access_token, repo_name, pr_number, commit_id)
 
                 else:
-                    process_pr_code_only_review.delay(access_token, repo_name, pr_number, commit_id)
+                    process_pr_code_only_review.delay(review_mode, access_token, repo_name, pr_number, commit_id)
 
                 # 성공적인 응답 반환
                 return JsonResponse({

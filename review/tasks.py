@@ -11,7 +11,7 @@ from review.common import download_file_content, get_grade, store_file_review, g
 SUPPORTED_EXTENSIONS = {".py", ".java", ".jsx", ".js"}
 
 @shared_task(ignore_result=True, max_retries=3)
-def process_pr_code_only_review(access_token, repo_name, pr_number, commit_id):
+def process_pr_code_only_review(review_mode, access_token, repo_name, pr_number, commit_id):
     """
     PR의 모든 파일에 대해 코드 리뷰를 수행하고, 결과를 PR에 댓글로 작성하는 함수
     이때 익스텐션 사용자의 pr이 아닌경우 db에 저장하지 않음
@@ -39,7 +39,7 @@ def process_pr_code_only_review(access_token, repo_name, pr_number, commit_id):
                 file_content = download_file_content(file_info["raw_url"])
 
                 # 코드 리뷰 수행
-                review_result = file_code_review(file_content)
+                review_result = file_code_review(review_mode, file_content)
                 print("review_result:", review_result)
 
                 review_text, score = get_score_review_text(file_path, review_result)
