@@ -72,6 +72,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost",
     "http://localhost:5173",
     "http://django:8000",
+    "https://github.com",
 ]
 
 CORS_ALLOW_HEADERS = [
@@ -83,6 +84,8 @@ CORS_ALLOW_HEADERS = [
     'origin',
     'user-agent',
     'access-control-allow-origin',
+    'x-requested-with',
+    'accept-encoding',
 ]
 
 CORS_ALLOW_METHODS = [
