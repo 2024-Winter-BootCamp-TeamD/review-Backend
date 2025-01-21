@@ -88,7 +88,7 @@ class UserReportAPIView(APIView):
         """
         # PR 리뷰 데이터를 테이블 형식으로 변환
         pr_table_rows = [
-            {"id": pr['id'], "title": pr['title'], "aver_grade": pr['aver_grade'], "created_at": pr['created_at']}
+            {"id": pr['id'], "title": pr['title'], "aver_grade": pr['aver_grade'], "problem_type": pr['problem_type'], "review_mode": pr['review_mode'], "created_at": pr['created_at']}
             for pr in pr_reviews
         ]
 
@@ -96,6 +96,9 @@ class UserReportAPIView(APIView):
         total_prs = len(pr_reviews)
         clean_mode_count = sum(1 for pr in pr_reviews if pr['review_mode'] == 'clean')
         optimize_mode_count = sum(1 for pr in pr_reviews if pr['review_mode'] == 'optimize')
+        study_mode_count = sum(1 for pr in pr_reviews if pr['review_mode'] == 'study')
+        newbie_mode_count = sum(1 for pr in pr_reviews if pr['review_mode'] == 'newbie')
+        basic_mode_count = sum(1 for pr in pr_reviews if pr['review_mode'] == 'basic')
 
         # DeepSeek API 프롬프트 생성
         prompt = f"""
@@ -110,17 +113,20 @@ class UserReportAPIView(APIView):
         - **분석된 PR 수**: {total_prs}
         - **Clean 모드**: {clean_mode_count}개의 리뷰
         - **Optimize 모드**: {optimize_mode_count}개의 리뷰
+        - **Study 모드**: {study_mode_count}개의 리뷰
+        - **newbie 모드**: {newbie_mode_count}개의 리뷰
+        - **basic 모드**: {basic_mode_count}개의 리뷰
 
         ---
 
         **2-2. 주요 취약점 및 개선 우선순위**
 
         **취약한 유형 통계 및 개선 방향**:
-        - 각 PR 리뷰에서 지적된 취약점을 분석하고, 개선 우선순위를 제시하세요.
+        - 각 PR 리뷰에서 지적된 취약점을 분석하고, 취약점의 분포를 표시하세요.
         - 가능한 경우, 다음과 같은 세부 사항을 포함하세요:
-          - **문제점**
+          - **취약점 유형 문제점**
           - **개선 방향**
-          - **관련 코드 예시**
+          - **안좋은 예시와 좋은 예시**
 
         ---
 
@@ -128,16 +134,18 @@ class UserReportAPIView(APIView):
 
         **사용자 맞춤 개선 방향**:
         - 가장 낮은 점수를 받은 평가 기준을 기반으로, 사용자 맞춤 피드백을 작성하세요.
-        - 구체적인 개선 방향과 코드를 포함하세요.
+        - 취약점을 잘 보완할 수 있는 보편적 개선안을 세세하게 출력해주세요.
 
         ---
 
         **2-4. 종합 결론**
 
-        - **프로젝트 평가**:
-          - 프로젝트의 강점 및 개선이 필요한 영역.
-        - **향후 권장 사항**:
-          - 클린 코드 모드 또는 최적화 모드 활용 제안.
+        - **총평**:
+          - 프로젝트의 전체적 성향 및 평균 등급을 출력하고 ~~부분에서 개선 여지가 가장 크다 라는 식의 독려하는 말투로 취약점 개선에 힘을 실어주세요.
+            - **강점**: 프로젝트 또는 코드의 긍정적인 점을 3개 이상 작성하세요.
+            - **약점**: 코드에서 개선이 필요한 점을 3개 이상 작성하세요.
+            - **향후 권장 사항**:
+          - ~~모드를 사용하며 사용자가 키워야 할 역량에 대해 알려주세요..
 
         ---
 
@@ -149,8 +157,8 @@ class UserReportAPIView(APIView):
 
         # DeepSeek API 요청
         headers = {
-            "Content-Type": "application/json",
             "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+            "Content-Type": "application/json",
         }
         payload = {
             "model": "deepseek-chat",
@@ -159,7 +167,7 @@ class UserReportAPIView(APIView):
         }
 
         try:
-            response = requests.post(DEEPSEEK_API_URL, json=payload, headers=headers)
+            response = requests.post(f"{DEEPSEEK_API_URL}", json=payload, headers=headers)
             response.raise_for_status()
 
             response_data = response.json()
@@ -177,14 +185,13 @@ class UserReportAPIView(APIView):
                     "total_prs": total_prs,
                     "clean_mode_count": clean_mode_count,
                     "optimize_mode_count": optimize_mode_count,
+                    "study_mode_count": study_mode_count,
+                    "newbie_mode_count": newbie_mode_count,
+                    "basic_mode_count": basic_mode_count,
+
                 },
                 "review_table": pr_table_rows,
                 "analysis": content,  # 분석 내용
-                "conclusion": {
-                    "strengths": ["기능이 잘 동작한다.", "구조가 단순하다."],
-                    "weaknesses": ["코드 중복이 많다.", "성능 최적화가 필요하다."],
-                    "recommendations": ["클린 코드 적용", "성능 개선"],
-                },
             }
             return structured_content
 
@@ -216,16 +223,23 @@ class UserReportAPIView(APIView):
         elements.append(Spacer(1, 12))
 
         # 테이블 데이터 변환
-        table_data = [["PR ID", "제목", "평균 등급", "리뷰 작성일자"]] + [
-            [item["id"], item["title"], item["aver_grade"], item["created_at"]]
+        table_data = [["PR ID", "제목", "평균 등급", "작성일자"]] + [
+            [
+                item["id"],
+                Paragraph(item["title"], styles['Normal']),  # 제목을 Paragraph로 처리
+                item["aver_grade"],
+                item["created_at"].split(" ")[0]
+            ]
             for item in report_data["review_table"]
         ]
-        table = Table(table_data, colWidths=[50, 200, 100, 150])
+
+        # Table 생성 및 스타일 적용
+        table = Table(table_data, colWidths=[50, 300, 70, 100])  # 제목 칸 확장
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'NanumGothic'),
+            ('FONTNAME', (0, 0), (-1, -1), 'NanumGothic'),  # NanumGothic 폰트 적용
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
         ]))
@@ -248,19 +262,6 @@ class UserReportAPIView(APIView):
         elements.append(Spacer(1, 24))
 
         # 결론
-        elements.append(Paragraph("3. 결론", styles['Heading2']))
-        elements.append(Spacer(1, 12))
-        elements.append(Paragraph("<strong>강점:</strong>", styles['Normal']))
-        for strength in report_data["conclusion"]["strengths"]:
-            elements.append(Paragraph(f"- {strength}", styles['Normal']))
-        elements.append(Spacer(1, 12))
-        elements.append(Paragraph("<strong>약점:</strong>", styles['Normal']))
-        for weakness in report_data["conclusion"]["weaknesses"]:
-            elements.append(Paragraph(f"- {weakness}", styles['Normal']))
-        elements.append(Spacer(1, 12))
-        elements.append(Paragraph("<strong>권장 사항:</strong>", styles['Normal']))
-        for recommendation in report_data["conclusion"]["recommendations"]:
-            elements.append(Paragraph(f"- {recommendation}", styles['Normal']))
 
         # PDF 생성
         doc.build(elements)
