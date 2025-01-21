@@ -22,32 +22,35 @@ def get_mode_prompts(review_mode):
 def get_pr_review(review, aver_grade, review_mode):
     try:
         mode_criteria = get_mode_prompts(review_mode)
+        mode_criteria_str = ", ".join(mode_criteria)
         response = client.chat.completions.create(
             model="deepseek-chat",
             messages=[
                 {"role": "system", "content": f'''
-                    당신은 **코드리뷰** 전문 개발자로, 
-                    하나의 PR의 수정된 파일들에 대해 작성된 각각의 코드리뷰들을 보고 종합한 PR 총평을 만들어주는 일을 한다.
-    ##규칙
-    ** {review}의 리뷰들을 세세히 검토하며, 해당 리뷰들을 아우르는 총평을 만든다.
-    - **total_review**: 당신이 받은 모든 리뷰들을 종합하여 총평을 만든다. {review_mode}에 맞는 심사 기준에 따라 리뷰를 진행한다.
-    - **problem_type**: 만약 평균 등급이 D,C,B,A 라면 문제를 찾고, 사용자의 모드가 "{review_mode}"일 때 다음 기준 중 하나를 선택한다:
-        {", ".join(mode_criteria)}
-      - 평균 등급이 S인 경우 problem_type은 출력하지 않는다.
+                            당신은 **코드리뷰** 전문 개발자로, 
+                            GitHub PR의 수정된 파일에 대해 작성된 코드리뷰들을 보고 종합한 PR 총평을 제공하는 일을 한다.
+            ## 입력 데이터
+            - 리뷰 내용: {review}
+            - 평균 등급: {aver_grade}
+            - 리뷰 모드: {review_mode}
+            
+            ##규칙
+            ** 모든 리뷰 내용을 세세히 검토하여 총평을 만든다.
+            - {aver_grade}이 S인 경우 problem_type을 출력하지 않는다.
+            - **problem_type**: 만약 평균 등급이 D,C,B,A 라면 반드시 다음 4가지 키워드 중에서 리뷰에서 가장 눈에 띄는 문제 하나를 problem_type으로 선정한다.
+              {mode_criteria_str}
+            - **total_review**: 당신이 받은 모든 리뷰들을 종합하여 총평을 만든다. 
+              {review_mode}에 맞는 심사 기준에 따라 리뷰를 진행하고, problem_type에 맞는 개선 방안을 제시한다.
 
-    ## 출력 형식
-    출력 형식은 JSON 형태로 각 key는 다음과 같이 구성한다. 
-    답안은 [] 내부에 작성되어야 하며, JSON 형식으로만 출력한다.
-    [
-        "total_review": " ",
-        "problem_type": " " ,
-        "average_grade": " ",
-    ]
-
-    ## 입력 데이터
-    - 리뷰 내용: {review}
-    - 평균 등급: {aver_grade}
-                '''},
+            ## 출력 형식
+            출력 형식은 JSON 형태로 각 key는 다음과 같이 구성한다. 
+            답안은 [] 내부에 작성되어야 하며, JSON 형식으로만 출력한다.
+            [
+                "average_grade": " ",
+                "problem_type": " " ,
+                "total_review": " ",
+            ]
+                        '''},
             ],
             stream=False
         )

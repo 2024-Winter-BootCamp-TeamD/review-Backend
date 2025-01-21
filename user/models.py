@@ -2,11 +2,11 @@ from django.db import models
 
 class User(models.Model):
     REVIEW_MODES = [
-        ('basic mode', 'Basic Mode'),
-        ('clean mode', 'Clean Mode'),
-        ('optimize mode', 'Optimize Mode'),
-        ('new bie mode', 'New Bie Mode'),
-        ('study mode', 'Study Mode')
+        ('basic', 'Basic'),
+        ('clean', 'Clean'),
+        ('optimize', 'Optimize'),
+        ('newbie', 'NewBie'),
+        ('study', 'Study')
     ]
     id = models.AutoField(primary_key=True)
     github_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
