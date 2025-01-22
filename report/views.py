@@ -17,6 +17,9 @@ from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.styles import getSampleStyleSheet
+from django.http import JsonResponse
+from django.db.models import Count
+
 import os
 
 # 폰트 경로 설정
@@ -423,21 +426,43 @@ class ReportDownloadAPIView(APIView):
             return Response({"error_message": "PDF 다운로드 실패"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class ReportModeAPIView(APIView):
+class ReportGraphDataAPIView(APIView):
     def get(self, request, report_id):
         try:
-            report = Report.objects.get(report_id=report_id)
+            # 리포트에 포함된 PR 가져오기
+            pr_reviews = PRReview.objects.filter(report_reviews__report_id=report_id, is_deleted=False)
 
-            pr_reviews = ReportPrReview.objects.filter(report=report)
-            modes = pr_reviews.values_list('pr_review__review_mode', flat=True).distinct()
+            # 1. PR 모드 및 각 PR 리뷰의 점수 데이터
+            pr_mode_data = list(
+                pr_reviews.values("review_mode", "aver_grade")
+            )
 
-            unique_modes = list(set(modes))
+            # 2. 등급 및 등급에 따른 이슈 타입 데이터
+            grade_distribution = pr_reviews.values("aver_grade").annotate(count=Count("id"))
 
-            return Response({"modes": unique_modes}, status=status.HTTP_200_OK)
+            issue_data = pr_reviews.values("aver_grade", "problem_type").annotate(count=Count("problem_type"))
 
-        except Report.DoesNotExist:
-            return Response({"error": "Report not found"}, status=status.HTTP_404_NOT_FOUND)
+            grade_issue_data = {
+                grade["aver_grade"]: {
+                    "data": [
+                        {
+                            "problem_type": issue["problem_type"],
+                            "count": issue["count"]
+                        }
+                        for issue in issue_data if issue["aver_grade"] == grade["aver_grade"]
+                    ]
+                }
+                for grade in grade_distribution
+            }
+
+            response_data = {
+                "pr_mode_data": pr_mode_data,
+                "grade_distribution": list(grade_distribution),
+                "grade_issue_data": grade_issue_data,
+            }
+
+            return JsonResponse(response_data, safe=False)
 
         except Exception as e:
-            logger.error(f"Error fetching report modes: {e}")
-            return Response({"error": "An unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.error(f"데이터 불러오기 중 오류 발생: {e}")
+            return JsonResponse({"error_message": "데이터를 불러오지 못했습니다."}, status=500)

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UserReportAPIView, ReportDetailAPIView, ReportDeleteAPIView, ReportDownloadAPIView, ReportModeAPIView
+from .views import UserReportAPIView, ReportDetailAPIView, ReportDeleteAPIView, ReportDownloadAPIView, ReportGraphDataAPIView
 
 
 urlpatterns = [
@@ -7,6 +7,6 @@ urlpatterns = [
     path('v1/reports/<int:report_id>/detail/', ReportDetailAPIView.as_view(), name='report-detail'),  # GET
     path('v1/reports/<int:report_id>/delete/', ReportDeleteAPIView.as_view(), name='report-delete'),  # DELETE
     path('v1/reports/<int:report_id>/download/', ReportDownloadAPIView.as_view(), name='report-download'),  # GET
-    path('v1/reports/<int:report_id>/mode/', ReportModeAPIView.as_view(), name='report-modes'),  # GET
+    path('v1/reports/<int:report_id>/graphs/', ReportGraphDataAPIView.as_view(), name='report-graph-data'), #GET
 ]
 
