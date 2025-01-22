@@ -16,29 +16,24 @@ def download_file_content(file_url):
 
 
 def get_grade(score):
-    if isinstance(score, (int, float)):  # 정수 또는 실수인지 확인
-        if 1 <= score < 3:
-            return "D"
-        elif 3 <= score < 5:
-            return "C"
-        elif 5 <= score < 7:
-            return "B"
-        elif 7 <= score < 9:
-            return "A"
-        elif 9 <= score <= 10:
-            return "S"
-        else:
-            return "Unknown"  # 1 미만 또는 10 초과인 경우
+    if 1 <= score < 3:
+        return "D"
+    elif 3 <= score < 5:
+        return "C"
+    elif 5 <= score < 7:
+        return "B"
+    elif 7 <= score < 9:
+        return "A"
+    elif 9 <= score <= 10:
+        return "S"
     else:
-        return "Unknown"  # 정수 또는 실수가 아닌 경우
+        return "Unknown"  # 1 미만 또는 10 초과인 경우
 
 
 def get_problem_type(pr_review_result):
     try:
-        # JSON 파싱
+        # JSON 파싱, problem_type 추출
         review_data = json.loads(pr_review_result)
-
-        # problem_type 추출
         problem_type = review_data.get("problem_type", None)
 
         if problem_type:
@@ -50,65 +45,39 @@ def get_problem_type(pr_review_result):
     except json.JSONDecodeError:
         print("Invalid JSON format. Falling back to regex.")
 
-    problem_type_match = re.search(r'"problem_type":\s*"([^"]*)"', pr_review_result)
-    if problem_type_match:
-        problem_type = problem_type_match.group(1)
-        print("problem_type (from regex):", problem_type)
-        return problem_type
-    else:
-        print("problem_type not found in regex.")
-        return None
+    return extract_pattern(r'"problem_type":\s*"([^"]*)"', pr_review_result)
 
 
-def store_file_review(file_path, pr_review_id, review_result, current_avg_score=0, file_num=0):
-    # review 부분 추출
-    pr_review = PRReview.objects.get(id=pr_review_id)
-    review_match = re.search(r'"review":\s*"([\s\S]*?)"', review_result)
-    if review_match:
-        review_text = review_match.group(1)
-        print("Review:", review_text)
-    else:
-        review_text = ""  # review를 찾을 수 없는 경우 기본값
-    score_match = re.search(r'"score":\s*"(\d+)"', review_result)
-    if score_match:
-        score = int(score_match.group(1))  # 숫자로 변환
-    else:
-        if file_num > 0:
-            score = current_avg_score
-            print(f"Score not found. Using current average score: {score}")
-        else:
-            score = 5
-            print(f"Score not found. Using default score: {score}")
-    grade = get_grade(score)
-    file_review = FileReview(
-        pr_review=pr_review,
-        file_path=file_path,
-        comment=review_text,
-        grade=grade
-    )
-    print(f"Score: {score}, Grade: {grade}")  # 출력: Score: 7, Grade: A
-    file_review.full_clean()
-    file_review.save()
+# review에서 text와 score 추출
+def get_score_review_text(review_result):
+    review_text = extract_pattern(r'"review":\s*"([\s\S]*?)"', review_result, "")
+    print("Review:", review_text)
+
+    score = int(extract_pattern(r'"score":\s*"(\d+)"', review_result, 5))
+    print(f"Score: {score}")  # 출력: Score: 7, Grade: A
 
     return review_text, score
 
 
-def get_score_review_text(file_path, review_result):
-    # review 부분 추출
-    review_match = re.search(r'"review":\s*"([\s\S]*?)"', review_result)
-    if review_match:
-        review_text = review_match.group(1)
-        print("Review:", review_text)
-    else:
-        review_text = ""  # review를 찾을 수 없는 경우 기본값
-    score_match = re.search(r'"score":\s*"(\d+)"', review_result)
-    if score_match:
-        score = int(score_match.group(1))  # 숫자로 변환
-    else:
-        score = 0  # score를 찾을 수 없는 경우 기본값
+def extract_pattern(pattern, text, default=None):
+    match = re.search(pattern, text)
+    if match:
+        return match.group(1)  # 매칭된 그룹에 변환 함수 적용
+    return default
 
-    grade = get_grade(score)
+"""
+정규식을 사용해 텍스트에서 패턴을 추출하고, 추출된 값에 변환 적용
 
-    print(f"Score: {score}, Grade: {grade}")  # 출력: Score: 7, Grade: A
-
-    return review_text, score
+pattern: 검색할 정규식 패턴
+    text: 검색 대상 텍스트
+    default: 패턴이 발견되지 않을 경우 반환할 기본값
+    transform: 추출된 값에 적용할 변환 함수 (기본값은 그대로 반환)
+   
+ 
+value = extract_pattern(
+    pattern=r'"problem_type":\s*"([\s\S]*?)"',
+    text=json_string,
+    default="",
+    transform=lambda x: x.strip()  # 공백 제거
+)
+"""
