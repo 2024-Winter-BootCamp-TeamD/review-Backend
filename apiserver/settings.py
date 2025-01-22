@@ -35,6 +35,8 @@ ALLOWED_HOSTS = [
     '374d-175-210-241-78.ngrok-free.app',  # ngrok 도메인 추가
     "chrome-extension://flpheaheemmfidkdnokahgmfpehnldkn",  # 확장 프로그램의 origin
     '2773-221-151-106-114.ngrok-free.app',
+    'refactory.store',
+    'www.refactory.store'
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # credentials 허용
@@ -73,6 +75,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://django:8000",
     "https://github.com",
+    "http://www.refactory.store",
+    "http://refactory.store",
+    "https://www.refactory.store",
+    "https://refactory.store"
 ]
 
 CORS_ALLOW_HEADERS = [
@@ -237,4 +243,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost',
     'http://localhost:8000',
+    "http://www.refactory.store",
+    "http://refactory.store",
+    "https://www.refactory.store",
+    "https://refactory.store"
 ]
