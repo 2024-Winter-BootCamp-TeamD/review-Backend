@@ -158,9 +158,10 @@ DATABASES = {
         'HOST': 'mysqldb',
 
         # 로컬에서 실행할 때
-        #'USER': os.getenv("MYSQL_ROOT_USER"),      # .env에서 사용자 이름 가져오기
-        #'PASSWORD': os.getenv('MYSQL_ROOT_PASSWORD'),  # .env에서 비밀번호 가져오기
-        #'HOST': 'localhost',
+        # 'USER': os.getenv("MYSQL_ROOT_USER"),      # .env에서 사용자 이름 가져오기
+        # 'PASSWORD': os.getenv('MYSQL_ROOT_PASSWORD'),  # .env에서 비밀번호 가져오기
+        # 'HOST': 'localhost',
+
 
         'PORT': '3306',  # MySQL 기본 포트
         'OPTIONS': {
@@ -206,6 +207,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
