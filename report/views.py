@@ -102,9 +102,7 @@ class UserReportAPIView(APIView):
 
         # DeepSeek API 프롬프트 생성
         prompt = f"""
-        # 리뷰 종합 보고서 생성 요청
-
-        아래 양식에 맞추어 보고서를 생성해주세요.
+        아래 양식에 맞추어 리뷰 종합 보고서를 생성해주세요.
 
         ---
 
@@ -145,7 +143,7 @@ class UserReportAPIView(APIView):
             - **강점**: 프로젝트 또는 코드의 긍정적인 점을 3개 이상 작성하세요.
             - **약점**: 코드에서 개선이 필요한 점을 3개 이상 작성하세요.
             - **향후 권장 사항**:
-          - ~~모드를 사용하며 사용자가 키워야 할 역량에 대해 알려주세요..
+          - ~~모드를 사용하며 사용자가 키워야 할 역량에 대해 알려주세요.
 
         ---
 
@@ -251,7 +249,7 @@ class UserReportAPIView(APIView):
         elements.append(Spacer(1, 12))
 
         # 분석 내용을 문단으로 구성
-        analysis_lines = report_data["analysis"].split("\n")
+        analysis_lines = report_data["analysis"].split("<\n>")
         for line in analysis_lines:
             if line.strip():
                 if line.startswith("-"):
@@ -305,6 +303,9 @@ class UserReportAPIView(APIView):
 
             # DeepSeek API 호출
             report_content = self.generate_report_with_deepseek(report_title, pr_reviews)
+            if "error" in report_content:
+                return Response({"error_message": report_content["details"]}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
             # PDF 생성 및 저장
             relative_pdf_path = f"report/reports/{now().strftime('%Y%m%d%H%M%S')}_report.pdf"
@@ -339,7 +340,7 @@ class UserReportAPIView(APIView):
                 "report_id": report.report_id,
                 "user_id": report.user_id,
                 "title": report.title,
-                "content": report.content,
+                "content": report_content,
                 "pdf_url": report.pdf_url,
                 "review_num": len(pr_reviews),
                 "created_at": report.created_at.isoformat()
@@ -348,6 +349,7 @@ class UserReportAPIView(APIView):
         except Exception as e:
             logger.error(f"보고서 생성 중 오류 발생: {e}")
             return Response({"error_message": f"보고서 생성 실패: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
 
     @staticmethod
     def generate_pdf_url(report_id):
