@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 
 # Create your views here.
 import os
@@ -21,7 +21,9 @@ class LoginGithubView(APIView):
     def get(self, request):
         # 깃허브 oauth2 로그인 페이지로 리다이렉트
         github_oauth_url = f"https://github.com/login/oauth/authorize?client_id={os.getenv("GITHUB_CLIENT_ID")}&redirect_uri={os.getenv("GITHUB_REDIRECT_URI")}&scope=repo,read:org,public_repo,write:discussion"
-        return redirect(github_oauth_url)
+        response = HttpResponseRedirect(github_oauth_url)
+        response['Access-Control-Allow-Origin'] = 'chrome-extension://flpheaheemmfidkdnokahgmfpehnldkn'
+        return response
 
 
 # 나중에 리팩토링으로 함수로 나눠야 함

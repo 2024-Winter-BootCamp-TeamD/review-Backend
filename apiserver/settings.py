@@ -33,9 +33,11 @@ ALLOWED_HOSTS = [
     '127.0.0.1',  # 로컬 개발
     'localhost',  # 로컬 개발
     '374d-175-210-241-78.ngrok-free.app',  # ngrok 도메인 추가
-    '8442-221-151-106-114.ngrok-free.app',
+    "chrome-extension://flpheaheemmfidkdnokahgmfpehnldkn",  # 확장 프로그램의 origin
+    '8fa2-221-151-106-114.ngrok-free.app',
 ]
 
+CORS_ALLOW_CREDENTIALS = True  # credentials 허용
 
 # Application definition
 
@@ -63,12 +65,14 @@ INSTALLED_APPS = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
+    "chrome-extension://flpheaheemmfidkdnokahgmfpehnldkn",  # 확장 프로그램의 origin
     "http://localhost:8000",
     "http://127.0.0.1:8000",
     "http://0.0.0.0:8000",
     "http://localhost",
     "http://localhost:5173",
-    "http://django:8000"
+    "http://django:8000",
+    "https://github.com",
 ]
 
 CORS_ALLOW_HEADERS = [
@@ -80,9 +84,18 @@ CORS_ALLOW_HEADERS = [
     'origin',
     'user-agent',
     'access-control-allow-origin',
+    'x-requested-with',
+    'accept-encoding',
 ]
 
-
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 
 SITE_ID = 1
 
@@ -140,14 +153,15 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.getenv('MYSQL_DATABASE'),  # .env에서 데이터베이스 이름 가져오기
         #  도커로 실행할 때
-        #'USER': os.getenv('MYSQL_USER'),      # .env에서 사용자 이름 가져오기
-        #'PASSWORD': os.getenv('MYSQL_PASSWORD'),  # .env에서 비밀번호 가져오기
-        #'HOST': 'mysqldb',
+        # 'USER': os.getenv('MYSQL_USER'),      # .env에서 사용자 이름 가져오기
+        # 'PASSWORD': os.getenv('MYSQL_PASSWORD'),  # .env에서 비밀번호 가져오기
+        # 'HOST': 'mysqldb',
 
         # 로컬에서 실행할 때
         'USER': os.getenv("MYSQL_ROOT_USER"),      # .env에서 사용자 이름 가져오기
         'PASSWORD': os.getenv('MYSQL_ROOT_PASSWORD'),  # .env에서 비밀번호 가져오기
         'HOST': 'localhost',
+
         'PORT': '3306',  # MySQL 기본 포트
         'OPTIONS': {
             'charset': 'utf8mb4',  # 문자 인코딩 설정
@@ -217,6 +231,8 @@ CELERY_TIMEZONE = 'Asia/Seoul'
 CELERY_ENABLE_UTC = False
 
 CSRF_TRUSTED_ORIGINS = [
+    "chrome-extension://flpheaheemmfidkdnokahgmfpehnldkn",  # 확장 프로그램의 origin
     'http://localhost:5173',
     'http://localhost',
+    'http://localhost:8000',
 ]

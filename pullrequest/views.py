@@ -160,6 +160,20 @@ PROBLEM_TYPE_CATEGORIES = {
     "DataStructure": "optimize",
 }
 
+'''
+# 문제 유형 대분류 매핑
+PROBLEM_TYPE_CATEGORIES = {
+    "명명 규칙": "clean",
+    "재사용성": "clean",
+    "단일 책임 원칙": "clean",  # Single Responsibility Principle
+    "캡슐화": "clean",
+    "시간복잡도": "optimize",  # Time Complexity
+    "공간복잡도": "optimize",  # Space Complexity
+    "알고리즘 적합성": "optimize",
+    "자료 구조 적합성": "optimize",
+}
+'''
+
 # 최신 10개 문제 유형 조회
 class PRReviewTroubleTypeView(APIView):
     def get(self, request):
