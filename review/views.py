@@ -1,26 +1,16 @@
 import json
-import os
-import re
-
-import requests
 from django.http import JsonResponse, HttpResponseBadRequest
-from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-
-from pullrequest.models import FileReview, PRReview
+from pullrequest.models import PRReview
 from repository.models import Repository
 from review.tasks import process_pr_code_review, process_pr_code_only_review
 from user.models import User
 
 
-
-# 리팩토링 요소 정리
-## 비동기 처리 구현
-## 비동기 처리 구현 이후 웹훅에는 수신 응답 빠르게 반환해야 함
 @csrf_exempt
 def github_webhook(request):
     if request.method == "POST":
-        # JSON 데이터를 파싱
+        # JSON 파싱
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError:
@@ -53,8 +43,6 @@ def github_webhook(request):
                 print("pr_number:", pr_number)
 
                 access_token = hook_owner.access_token
-                print("Access Token:", access_token)
-
                 commit_id = data['pull_request']['head']['sha']
 
                 if sender_username == hook_owner.github_username:

@@ -148,6 +148,8 @@ class PRReviewAllAverageGradeView(APIView):
 
         return Response({"data": results})
 
+
+'''
 # 문제 유형 대분류 매핑
 PROBLEM_TYPE_CATEGORIES = {
     "Convention": "clean",
@@ -159,7 +161,6 @@ PROBLEM_TYPE_CATEGORIES = {
     "Algorithm": "optimize",
     "DataStructure": "optimize",
 }
-
 '''
 # 문제 유형 대분류 매핑
 PROBLEM_TYPE_CATEGORIES = {
@@ -172,8 +173,6 @@ PROBLEM_TYPE_CATEGORIES = {
     "알고리즘 적합성": "optimize",
     "자료 구조 적합성": "optimize",
 }
-'''
-
 # 최신 10개 문제 유형 조회
 class PRReviewTroubleTypeView(APIView):
     def get(self, request):
