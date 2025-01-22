@@ -69,15 +69,15 @@ class PartReviewView(APIView):
             "Authorization": f"Bearer {api_key}"
         }
 
-        response = requests.post(api_url, json=payload, headers=headers)
+        with requests.post(api_url, json=payload, headers=headers, stream=True) as response:
+            if response.status_code != 200:
+                error_msg = response.json().get("error", "Unknown error occurred.")
+                raise Exception(f"DeepSeek API failed: {error_msg}")
 
-        if response.status_code != 200:
-            error_msg = response.json().get("error", "Unknown error occurred.")
-            raise Exception(f"DeepSeek API failed: {error_msg}")
-
-            # 스트리밍 응답 처리
-        for chunk in response.iter_lines():
-            if chunk:
-                decoded_chunk = chunk.decode("utf-8")
-                if decoded_chunk.startswith("data:"):
-                    yield decoded_chunk
+            for chunk in response.iter_content(chunk_size=None):
+                if chunk:
+                    decoded_chunk = chunk.decode("utf-8")
+                    # data:로 시작하지 않으면 강제로 data:를 추가
+                    if not decoded_chunk.startswith("data:"):
+                        decoded_chunk = f"data: {decoded_chunk}"
+                    yield f"{decoded_chunk}\n\n"
