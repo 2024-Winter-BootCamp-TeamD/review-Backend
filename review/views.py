@@ -3,7 +3,7 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from pullrequest.models import PRReview
 from repository.models import Repository
-from review.tasks import process_pr_code_review, process_pr_code_only_review
+from review.tasks import process_code_review, process_only_code_review
 from user.models import User
 
 
@@ -35,22 +35,17 @@ def github_webhook(request):
 
     try:
         repository = Repository.objects.get(repository_github_id=repository_github_id)
+        hook_owner = User.objects.get(id=repository.user_id_id)
+
         repo_name = data['repository']['full_name']
         commit_id = data['pull_request']['head']['sha']
         pr_number = pr['number']
         print("repo_name:", repo_name)
 
-        hook_owner = User.objects.get(id=repository.user_id_id)
         access_token = hook_owner.access_token
         review_mode = hook_owner.review_mode
         print(f"Sender's Username, Hook Owner: {sender_username}, {hook_owner.github_username}")
         print(f"review mode: {review_mode}")
-
-        # JSON 데이터 캐싱
-
-
-
-
 
         if sender_username == hook_owner.github_username:
             pr_review = PRReview(
@@ -63,10 +58,10 @@ def github_webhook(request):
             )
             pr_review.full_clean()
             pr_review.save()
-            process_pr_code_review.delay(pr_review.id, access_token, repo_name, pr_number, commit_id)
+            process_code_review.delay(pr_review.id, access_token, repo_name, pr_number, commit_id)
 
         else:
-            process_pr_code_only_review.delay(review_mode, access_token, repo_name, pr_number, commit_id)
+            process_only_code_review.delay(review_mode, access_token, repo_name, pr_number, commit_id)
 
         # 성공적인 응답 반환
         return JsonResponse({
