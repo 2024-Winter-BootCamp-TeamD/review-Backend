@@ -20,7 +20,7 @@ load_dotenv()
 class LoginGithubView(APIView):
     def get(self, request):
         # 깃허브 oauth2 로그인 페이지로 리다이렉트
-        github_oauth_url = f"https://github.com/login/oauth/authorize?client_id={os.getenv("GITHUB_CLIENT_ID")}&redirect_uri={os.getenv("GITHUB_REDIRECT_URI")}&scope=repo,read:org,public_repo,write:discussion"
+        github_oauth_url = f"https://github.com/login/oauth/authorize?client_id={os.getenv("DEPLOY_GITHUB_CLIENT_ID")}&redirect_uri={os.getenv("DEPLOY_GITHUB_REDIRECT_URI")}&scope=repo,read:org,public_repo,write:discussion"
         response = HttpResponseRedirect(github_oauth_url)
         response['Access-Control-Allow-Origin'] = 'chrome-extension://flpheaheemmfidkdnokahgmfpehnldkn'
         return response
@@ -34,10 +34,10 @@ class LoginGithubCallbackView(APIView):
         # GitHub 액세스 토큰 요청
         token_url = "https://github.com/login/oauth/access_token"
         payload = {
-            'client_id': os.getenv("GITHUB_CLIENT_ID"),
-            'client_secret': os.getenv("GITHUB_CLIENT_SECRET"),
+            'client_id': os.getenv("DEPLOY_GITHUB_CLIENT_ID"),
+            'client_secret': os.getenv("DEPLOY_GITHUB_CLIENT_SECRET"),
             'code': code,
-            'redirect_uri': os.getenv("GITHUB_REDIRECT_URI")
+            'redirect_uri': os.getenv("DEPLOY_GITHUB_REDIRECT_URI")
         }
         response = requests.post(token_url, data=payload, headers={'Accept': 'application/json'})
         response_data = response.json()
