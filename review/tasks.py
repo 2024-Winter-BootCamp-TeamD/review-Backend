@@ -42,7 +42,7 @@ def process_pr_code_only_review(review_mode, access_token, repo_name, pr_number,
                 review_text, score = get_score_review_text(review_result)
                 file_num += 1
                 total_score += score
-                gather_reviews = " ".join(review_text)
+                gather_reviews = "".join(review_text)
 
                 # 리뷰 결과를 PR에 댓글로 추가
                 post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path, review_text)
@@ -76,6 +76,7 @@ def process_pr_code_review(pr_review_id, access_token, repo_name, pr_number, com
         # PR의 모든 파일 가져오기
         pr_files = get_pr_files(access_token, repo_name, pr_number)
 
+
         # 등급 평균 추출 준비
         file_num = 0
         total_score = 0
@@ -106,7 +107,7 @@ def process_pr_code_review(pr_review_id, access_token, repo_name, pr_number, com
                 file_review.full_clean()
                 file_review.save()
                 total_score += score
-                gather_reviews = " ".join(review_text)
+                gather_reviews = "".join(review_text)
                 # 리뷰 결과를 PR에 댓글로 추가
                 post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path, review_text)
             else:
