@@ -80,7 +80,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://refactory.store",
     "https://www.refactory.store",
     "https://refactory.store",
-    "34.44.174.202"
 ]
 
 CORS_ALLOW_HEADERS = [
