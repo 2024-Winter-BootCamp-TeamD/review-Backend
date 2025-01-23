@@ -36,7 +36,8 @@ ALLOWED_HOSTS = [
     "chrome-extension://flpheaheemmfidkdnokahgmfpehnldkn",  # 확장 프로그램의 origin
     '2773-221-151-106-114.ngrok-free.app',
     'refactory.store',
-    'www.refactory.store'
+    'www.refactory.store',
+    '34.44.174.202'
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # credentials 허용
@@ -78,7 +79,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://www.refactory.store",
     "http://refactory.store",
     "https://www.refactory.store",
-    "https://refactory.store"
+    "https://refactory.store",
+    "34.44.174.202"
 ]
 
 CORS_ALLOW_HEADERS = [
