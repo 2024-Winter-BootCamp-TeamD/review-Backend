@@ -61,6 +61,7 @@ def extract_pattern(pattern, text, default=None):
         return match.group(1)  # 매칭된 그룹에 변환 함수 적용
     return default
 
+
 """
 정규식을 사용해 텍스트에서 패턴을 추출하고, 추출된 값에 변환 적용
 
@@ -68,8 +69,8 @@ pattern: 검색할 정규식 패턴
     text: 검색 대상 텍스트
     default: 패턴이 발견되지 않을 경우 반환할 기본값
     transform: 추출된 값에 적용할 변환 함수 (기본값은 그대로 반환)
-   
- 
+
+
 value = extract_pattern(
     pattern=r'"problem_type":\s*"([\s\S]*?)"',
     text=json_string,
