@@ -451,3 +451,4 @@ $RECYCLE.BIN/
 .venv
 .idea
 data
+certbot
