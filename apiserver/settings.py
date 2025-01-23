@@ -34,6 +34,7 @@ ALLOWED_HOSTS = [
     'localhost',  # 로컬 개발
     '374d-175-210-241-78.ngrok-free.app',  # ngrok 도메인 추가
     "chrome-extension://flpheaheemmfidkdnokahgmfpehnldkn",  # 확장 프로그램의 origin
+    '68d9-221-151-106-114.ngrok-free.app',
     'refactory.store',
     'www.refactory.store',
     '7e2b-61-255-49-90.ngrok-free.app',
