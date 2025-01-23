@@ -152,7 +152,9 @@ def run_pr_review(file_review_results, pr_review_id, access_token, repo_name, pr
         pr_review_result = get_pr_review(gather_reviews, aver_grade, pr_review.review_mode)
 
         # PR 총평 댓글 추가
-        total_review = post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result)
+        total_review = post_pr_summary_comment(
+            access_token, repo_name, pr_number, pr_review_result, pr_review.review_mode
+        )
 
         # PRReview 업데이트
         pr_review.total_review = total_review
@@ -171,6 +173,7 @@ def run_pr_review(file_review_results, pr_review_id, access_token, repo_name, pr
     except Exception as e:
         print(f"Error in aggregate_and_finalize_pr_review: {e}")
 
+
 # PR 리뷰 수행
 @shared_task
 def run_only_pr_review(review_mode, file_review_results, access_token, repo_name, pr_number):
@@ -184,10 +187,13 @@ def run_only_pr_review(review_mode, file_review_results, access_token, repo_name
         pr_review_result = get_pr_review(gather_reviews, aver_grade, review_mode)
 
         # PR 총평 댓글 추가
-        post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result)
+        post_pr_summary_comment(
+            access_token, repo_name, pr_number, pr_review_result, review_mode
+        )
 
     except Exception as e:
         print(f"Error in process_only_pr_review: {e}")
+
 
 
 @shared_task(ignore_result=True, max_retries=3)
@@ -245,42 +251,108 @@ def get_pr_files(access_token, repo_name, pr_number):
         raise Exception(f"Failed to retrieve PR files: {response.status_code}, {response.text}")
 
 
-@shared_task(max_retries=3)
-def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result):
-    url = f"https://api.github.com/repos/{repo_name}/issues/{pr_number}/comments"
-    # 추출
-    total_review = extract_pattern(
-        r'"total_review":\s*"([\s\S]*?)"', pr_review_result, "" )
-    print("total_review:", total_review)
-
-    problem_type = extract_pattern(
-        r'"problem_type":\s*"([^"]*?)"', pr_review_result, "")
-    print("problem_type:", problem_type)
-
-    average_grade = extract_pattern(
-        r'"average_grade":\s*"([^"]*?)"', pr_review_result, "")
-    print("average_grade:", average_grade)
-
-    comment_body = f"""
-    ### PR 리뷰 총평
-    - **총평**: {total_review}
-    - **문제 유형**: {problem_type}
-    - **평균 등급**: {average_grade}
+def format_review(review_text, line_length=80):
     """
+    긴 리뷰 텍스트를 지정된 줄 길이로 나누어 가독성을 높입니다.
+    Args:
+        review_text (str): 총평 텍스트
+        line_length (int): 한 줄의 최대 문자 수 (기본값: 80)
+    Returns:
+        str: 줄바꿈된 텍스트
+    """
+    if not review_text:
+        return "리뷰 내용이 없습니다."
+
+    # 각 개선점을 '\n' 기준으로 구분
+    review_lines = review_text.split("\\n")  # JSON의 \n 형태를 처리
+
+    # 줄바꿈을 포함한 포맷팅된 텍스트를 저장
+    formatted_lines = []
+
+    for line in review_lines:
+        words = line.split(" ")
+        lines = []
+        current_line = []
+        current_length = 0
+
+        for word in words:
+            if current_length + len(word) + 1 > line_length:
+                lines.append(" ".join(current_line))
+                current_line = [word]
+                current_length = len(word)
+            else:
+                current_line.append(word)
+                current_length += len(word) + 1
+
+        if current_line:
+            lines.append(" ".join(current_line))
+
+        # 한 문단을 완성
+        formatted_lines.append("\n".join(lines))
+
+    return "\n\n".join(formatted_lines)  # 각 문단 사이에 두 줄 간격 추가
+
+
+@shared_task(max_retries=3)
+def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result, review_mode):
+    url = f"https://api.github.com/repos/{repo_name}/issues/{pr_number}/comments"
+
+    # Extract review data
+    total_review = extract_pattern(
+        r'"total_review":\s*"([\s\S]*?)"', pr_review_result, ""
+    ).replace("```", "").strip()  # 백틱 제거
+    problem_type = extract_pattern(
+        r'"problem_type":\s*"([^"]*?)"', pr_review_result, ""
+    )
+    average_grade = extract_pattern(
+        r'"average_grade":\s*"([^"]*?)"', pr_review_result, ""
+    )
+
+    # Format the total review (split into readable lines)
+    formatted_total_review = format_review(total_review)
+
+    # Compose the comment body
+    comment_body = f"""
+## 📝 PR 리뷰 총평
+
+### 🔍 **총평**
+{formatted_total_review}
+
+### 🚩 **주요 문제 유형**
+- {problem_type or "특별한 문제 유형이 없습니다."}
+
+### 📊 **모드 및 평균 등급**
+- 리뷰 모드: {review_mode or "모드 정보 없음"}
+- 평균 등급: {average_grade or "평가 점수 없음"}
+
+---
+💡 **Tip**: '{problem_type or "개선 사항"}'에 대한 개선점을 중점적으로 고려하세요.
+    """.strip()  # 전체 텍스트 양 끝의 공백 제거
 
     headers = {
         "Authorization": f"Bearer {access_token}",
-        "Accept": "application/vnd.github.v3+json"
+        "Accept": "application/vnd.github.v3+json",
     }
     data = {
-        "body": comment_body.strip()  # 총평 내용
+        "body": comment_body.strip()
     }
 
     try:
+        # Check final comment body before sending
+        print("Final Comment Body Sent to GitHub:")
+        print(comment_body)
+
+        # Post to GitHub
         response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()  # HTTP 오류가 발생하면 예외를 발생시킴
+        response.raise_for_status()
         print("PR에 총평 댓글이 성공적으로 작성되었습니다.")
     except requests.exceptions.RequestException as e:
         print(f"PR 댓글 작성 중 오류 발생: {str(e)}")
 
-    return total_review
+    return formatted_total_review
+
+
+
+
+
+
