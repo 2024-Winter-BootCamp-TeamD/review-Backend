@@ -95,7 +95,16 @@ def run_file_review(file_info, pr_review_id, access_token, repo_name, pr_number,
         file_review.save()
 
         # PR 파일 리뷰 결과를 댓글로 추가
-        post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path, review_text)
+        comment_data = {
+            "commit_id": commit_id,
+            "access_token": access_token,
+            "repo_name": repo_name,
+            "pr_number": pr_number,
+            "file_path": file_path,
+            "comment": review_text,
+            "score": score,
+        }
+        post_comment_to_pr(comment_data)
         return {"score": score, "review_text": review_text}
 
     except Exception as e:
@@ -111,8 +120,18 @@ def run_only_file_review(file_info, review_mode, access_token, repo_name, pr_num
         review_result = file_code_review(review_mode, file_content)
         review_text, score = get_score_review_text(review_result)
 
+        comment_data = {
+            "commit_id": commit_id,
+            "access_token": access_token,
+            "repo_name": repo_name,
+            "pr_number": pr_number,
+            "file_path": file_path,
+            "comment": review_text,
+            "score": score,
+        }
+
         # PR 파일 리뷰 결과를 댓글로 추가
-        post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path, review_text)
+        post_comment_to_pr.delay(comment_data)
         return {"score": score, "review_text": review_text}
 
     except Exception as e:
@@ -172,25 +191,30 @@ def run_only_pr_review(review_mode, file_review_results, access_token, repo_name
 
 
 @shared_task(ignore_result=True, max_retries=3)
-def post_comment_to_pr(commit_id, access_token, repo_name, pr_number, file_path, comment):
+def post_comment_to_pr(comment_data):
     """
     PR 파일에 댓글을 추가하는 함수
     """
+    comment = comment_data["comment"]
+    file_path = comment_data["file_path"]
+    score = comment_data["score"]//1
     if "리뷰할 내용이 없습니다" in comment:
         print(f"Skipping comment for {file_path}: 리뷰할 내용이 없습니다.")
         return
 
-    GITHUB_TOKEN = access_token
+    GITHUB_TOKEN = comment_data['access_token']
     GITHUB_API_URL = "https://api.github.com"
 
-    url = f"{GITHUB_API_URL}/repos/{repo_name}/pulls/{pr_number}/comments"
+    url = f"{GITHUB_API_URL}/repos/{comment_data['repo_name']}/pulls/{comment_data['pr_number']}/comments"
     headers = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
 
     # 요청 데이터 생성
     data = {
-        "body": comment,  # 댓글 내용
+        "body": f"**Score**: {score}/10\n"
+                f"**Grade**: {get_grade(score)}\n\n"
+                f"{comment}",  # 댓글 내용
         "path": file_path,  # 파일 경로
-        "commit_id": commit_id,  # 커밋 ID
+        "commit_id": comment_data['commit_id'],  # 커밋 ID
         "subject_type": "file",  # 추가된 코드는 RIGHT, 삭제된 코드는 LEFT
     }
 
