@@ -18,7 +18,7 @@ jobs:
 
       - name: Deploy to GCP
         if: github.ref == 'refs/heads/deploy' && github.event_name == 'push'
-        uses: appleboy/ssh-action@1.1.0
+        uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.GCP_HOST }}
           username: ${{ secrets.GCP_USER }}
