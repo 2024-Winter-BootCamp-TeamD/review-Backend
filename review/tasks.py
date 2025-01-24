@@ -149,11 +149,11 @@ def run_pr_review(file_review_results, pr_review_id, access_token, repo_name, pr
         gather_reviews = "".join(result["review_text"] for result in file_review_results if result)
 
         # PR 총평 생성
-        pr_review_result = get_pr_review(gather_reviews, aver_grade, pr_review.review_mode)
+        pr_review_result = get_pr_review(gather_reviews, pr_review.review_mode)
 
         # PR 총평 댓글 추가
         total_review = post_pr_summary_comment(
-            access_token, repo_name, pr_number, pr_review_result, pr_review.review_mode
+            access_token, repo_name, pr_number, pr_review_result, pr_review.review_mode, aver_grade
         )
 
         # PRReview 업데이트
@@ -184,11 +184,11 @@ def run_only_pr_review(review_mode, file_review_results, access_token, repo_name
         gather_reviews = "".join(result["review_text"] for result in file_review_results if result)
 
         # PR 총평 생성
-        pr_review_result = get_pr_review(gather_reviews, aver_grade, review_mode)
+        pr_review_result = get_pr_review(gather_reviews, review_mode)
 
         # PR 총평 댓글 추가
         post_pr_summary_comment(
-            access_token, repo_name, pr_number, pr_review_result, review_mode
+            access_token, repo_name, pr_number, pr_review_result, review_mode, aver_grade
         )
 
     except Exception as e:
@@ -294,7 +294,7 @@ def format_review(review_text, line_length=80):
 
 
 @shared_task(max_retries=3)
-def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result, review_mode):
+def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result, review_mode, aver_grade):
     url = f"https://api.github.com/repos/{repo_name}/issues/{pr_number}/comments"
 
     # Extract review data
@@ -303,9 +303,6 @@ def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result
     ).replace("```", "").strip()  # 백틱 제거
     problem_type = extract_pattern(
         r'"problem_type":\s*"([^"]*?)"', pr_review_result, ""
-    )
-    average_grade = extract_pattern(
-        r'"average_grade":\s*"([^"]*?)"', pr_review_result, ""
     )
 
     # Format the total review (split into readable lines)
@@ -323,7 +320,7 @@ def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result
 
 ### 📊 **모드 및 평균 등급**
 - 리뷰 모드: {review_mode or "모드 정보 없음"}
-- 평균 등급: {average_grade or "평가 점수 없음"}
+- 평균 등급: {aver_grade or "평가 점수 없음"}
 
 ---
 💡 **Tip**: '{problem_type or "개선 사항"}'에 대한 개선점을 중점적으로 고려하세요.
