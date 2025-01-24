@@ -203,10 +203,13 @@ def post_comment_to_pr(comment_data):
     """
     comment = comment_data["comment"]
     file_path = comment_data["file_path"]
-    score = comment_data["score"]//1
+    score = comment_data["score"] // 1
     if "리뷰할 내용이 없습니다" in comment:
         print(f"Skipping comment for {file_path}: 리뷰할 내용이 없습니다.")
         return
+
+    # 리뷰 텍스트 포맷팅
+    formatted_comment = format_review(comment)
 
     GITHUB_TOKEN = comment_data['access_token']
     GITHUB_API_URL = "https://api.github.com"
@@ -218,7 +221,7 @@ def post_comment_to_pr(comment_data):
     data = {
         "body": f"**Score**: {score}/10\n"
                 f"**Grade**: {get_grade(score)}\n\n"
-                f"{comment}",  # 댓글 내용
+                f"{formatted_comment}",  # 줄바꿈 처리된 리뷰 본문
         "path": file_path,  # 파일 경로
         "commit_id": comment_data['commit_id'],  # 커밋 ID
         "subject_type": "file",  # 추가된 코드는 RIGHT, 삭제된 코드는 LEFT
@@ -251,46 +254,67 @@ def get_pr_files(access_token, repo_name, pr_number):
         raise Exception(f"Failed to retrieve PR files: {response.status_code}, {response.text}")
 
 
+def sanitize_code_snippet(code_snippet):
+    """
+    코드 스니펫을 안전하게 처리하여 Markdown 코드 블록에서 `\`와 줄바꿈이 정상적으로 출력되도록 변환합니다.
+
+    Args:
+        code_snippet (str): 원본 코드 스니펫
+    Returns:
+        str: 변환된 코드 스니펫
+    """
+    # 역슬래시(\)를 (inverse /)로 안전하게 대체
+    sanitized = code_snippet.replace("\\", "(inverse /)")
+
+    # 필요에 따라 추가적인 이스케이프 처리가 필요하다면 여기에 추가 가능
+    return sanitized
+
+
 def format_review(review_text, line_length=80):
     """
-    긴 리뷰 텍스트를 지정된 줄 길이로 나누어 가독성을 높입니다.
+    리뷰 텍스트를 줄바꿈과 Markdown 코드 블록 처리를 통해 포맷팅합니다.
+
     Args:
-        review_text (str): 총평 텍스트
-        line_length (int): 한 줄의 최대 문자 수 (기본값: 80)
+        review_text (str): 리뷰 텍스트
+        line_length (int): 한 줄의 최대 문자 수
     Returns:
-        str: 줄바꿈된 텍스트
+        str: 포맷팅된 텍스트
     """
     if not review_text:
         return "리뷰 내용이 없습니다."
 
-    # 각 개선점을 '\n' 기준으로 구분
-    review_lines = review_text.split("\\n")  # JSON의 \n 형태를 처리
-
-    # 줄바꿈을 포함한 포맷팅된 텍스트를 저장
     formatted_lines = []
+    in_code_block = False
 
-    for line in review_lines:
-        words = line.split(" ")
-        lines = []
-        current_line = []
-        current_length = 0
+    for line in review_text.split("\\n"):  # JSON에서 줄바꿈을 분리하여 처리
+        # 코드 블록 시작/끝 감지
+        if line.startswith("```python") or line.startswith("```"):
+            in_code_block = not in_code_block
+            formatted_lines.append(line)
+            continue
 
-        for word in words:
-            if current_length + len(word) + 1 > line_length:
-                lines.append(" ".join(current_line))
-                current_line = [word]
-                current_length = len(word)
-            else:
-                current_line.append(word)
-                current_length += len(word) + 1
+        if in_code_block:
+            # 코드 블록 내에서는 `\`를 안전하게 변환
+            formatted_lines.append(sanitize_code_snippet(line))
+        else:
+            # 코드 블록 밖에서는 줄바꿈과 포맷팅 적용
+            words = line.split(" ")
+            current_line = []
+            current_length = 0
 
-        if current_line:
-            lines.append(" ".join(current_line))
+            for word in words:
+                if current_length + len(word) + 1 > line_length:
+                    formatted_lines.append(" ".join(current_line))
+                    current_line = [word]
+                    current_length = len(word)
+                else:
+                    current_line.append(word)
+                    current_length += len(word) + 1
 
-        # 한 문단을 완성
-        formatted_lines.append("\n".join(lines))
+            if current_line:
+                formatted_lines.append(" ".join(current_line))
 
-    return "\n\n".join(formatted_lines)  # 각 문단 사이에 두 줄 간격 추가
+    return "\n".join(formatted_lines)
 
 
 @shared_task(max_retries=3)
