@@ -255,38 +255,35 @@ def get_pr_files(access_token, repo_name, pr_number):
 
 
 def sanitize_code_snippet(code_snippet):
-    """
-    코드 스니펫을 안전하게 처리하여 Markdown 코드 블록에서 `\`와 줄바꿈이 정상적으로 출력되도록 변환합니다.
-
-    Args:
-        code_snippet (str): 원본 코드 스니펫
-    Returns:
-        str: 변환된 코드 스니펫
-    """
-    # 역슬래시(\)를 (inverse /)로 안전하게 대체
-    sanitized = code_snippet.replace("\\", "(inverse /)")
-
-    # 필요에 따라 추가적인 이스케이프 처리가 필요하다면 여기에 추가 가능
+    if not code_snippet:
+        return ""
+    # 역슬래시(`\`)와 기타 특수 문자를 Markdown-safe 형태로 변환
+    sanitized = (
+        code_snippet.replace("\\", "\\\\")  # 역슬래시를 임시 대체
+        .replace("`", "\\`")  # 백틱을 이스케이프 처리
+        .replace("\n", "\\n")  # 줄바꿈을 JSON-safe 형태로 변환
+    )
     return sanitized
 
 
-def format_review(review_text, line_length=80):
-    """
-    리뷰 텍스트를 줄바꿈과 Markdown 코드 블록 처리를 통해 포맷팅합니다.
+def restore_code_snippet(sanitized_snippet):
+    if not sanitized_snippet:
+        return ""
+    return (
+        sanitized_snippet.replace("\\\\", "\\")  # 역슬래시 복원
+        .replace("\\n", "\n")  # 줄바꿈 복원
+        .replace("\\`", "`")  # 백틱 복원
+    )
 
-    Args:
-        review_text (str): 리뷰 텍스트
-        line_length (int): 한 줄의 최대 문자 수
-    Returns:
-        str: 포맷팅된 텍스트
-    """
+
+def format_review(review_text, line_length=150):
     if not review_text:
         return "리뷰 내용이 없습니다."
 
     formatted_lines = []
     in_code_block = False
 
-    for line in review_text.split("\\n"):  # JSON에서 줄바꿈을 분리하여 처리
+    for line in review_text.split("\\n"):  # JSON에서 줄바꿈 분리
         # 코드 블록 시작/끝 감지
         if line.startswith("```python") or line.startswith("```"):
             in_code_block = not in_code_block
@@ -294,10 +291,11 @@ def format_review(review_text, line_length=80):
             continue
 
         if in_code_block:
-            # 코드 블록 내에서는 `\`를 안전하게 변환
-            formatted_lines.append(sanitize_code_snippet(line))
+            # 코드 블록 내 특수 문자 변환
+            sanitized_line = sanitize_code_snippet(line)
+            formatted_lines.append(sanitized_line)
         else:
-            # 코드 블록 밖에서는 줄바꿈과 포맷팅 적용
+            # 코드 블록 외부에서는 기본 줄바꿈 처리
             words = line.split(" ")
             current_line = []
             current_length = 0
@@ -314,8 +312,8 @@ def format_review(review_text, line_length=80):
             if current_line:
                 formatted_lines.append(" ".join(current_line))
 
-    return "\n".join(formatted_lines)
-
+    formatted_text = "\n".join(formatted_lines)
+    return restore_code_snippet(formatted_text)
 
 @shared_task(max_retries=3)
 def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result, review_mode, aver_grade):
