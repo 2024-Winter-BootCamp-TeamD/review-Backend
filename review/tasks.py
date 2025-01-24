@@ -138,7 +138,7 @@ def run_only_file_review(file_info, review_mode, access_token, repo_name, pr_num
         print(f"Error in process_file_review for file {file_info['filename']}: {str(e)}")
 
 # PR 리뷰 수행
-@shared_task
+@shared_task(ignore_result=True, max_retries=3)
 def run_pr_review(file_review_results, pr_review_id, access_token, repo_name, pr_number):
     try:
         pr_review = PRReview.objects.get(id=pr_review_id)
@@ -175,7 +175,7 @@ def run_pr_review(file_review_results, pr_review_id, access_token, repo_name, pr
 
 
 # PR 리뷰 수행
-@shared_task
+@shared_task(ignore_result=True, max_retries=3)
 def run_only_pr_review(review_mode, file_review_results, access_token, repo_name, pr_number):
     try:
         # 파일 리뷰 결과 집계
@@ -203,7 +203,7 @@ def post_comment_to_pr(comment_data):
     """
     comment = comment_data["comment"]
     file_path = comment_data["file_path"]
-    score = comment_data["score"] // 1
+    score = int(comment_data["score"])
     if "리뷰할 내용이 없습니다" in comment:
         print(f"Skipping comment for {file_path}: 리뷰할 내용이 없습니다.")
         return
@@ -315,7 +315,7 @@ def format_review(review_text, line_length=150):
     formatted_text = "\n".join(formatted_lines)
     return restore_code_snippet(formatted_text)
 
-@shared_task(max_retries=3)
+@shared_task(ignore_result=True, max_retries=3)
 def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result, review_mode, aver_grade):
     url = f"https://api.github.com/repos/{repo_name}/issues/{pr_number}/comments"
 
@@ -367,9 +367,6 @@ def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result
         print("PR에 총평 댓글이 성공적으로 작성되었습니다.")
     except requests.exceptions.RequestException as e:
         print(f"PR 댓글 작성 중 오류 발생: {str(e)}")
-
-    return formatted_total_review
-
 
 
 
