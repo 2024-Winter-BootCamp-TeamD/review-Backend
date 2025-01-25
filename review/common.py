@@ -1,7 +1,6 @@
 import json
 import re
 import requests
-from pullrequest.models import FileReview, PRReview
 
 
 def download_file_content(file_url):
