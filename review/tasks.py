@@ -369,9 +369,3 @@ def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result
         print(f"PR 댓글 작성 중 오류 발생: {str(e)}")
 
     return formatted_total_review
-
-
-
-
-
-

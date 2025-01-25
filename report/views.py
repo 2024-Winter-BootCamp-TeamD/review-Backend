@@ -18,6 +18,9 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.styles import getSampleStyleSheet
 import os
+from html import escape
+from reportlab.platypus import Paragraph
+from reportlab.lib.styles import ParagraphStyle
 
 # 폰트 경로 설정
 FONT_PATH_REGULAR = os.path.join(os.path.dirname(__file__), 'fonts', 'NanumGothic.ttf')
@@ -120,11 +123,11 @@ class UserReportAPIView(APIView):
         **2-2. 주요 취약점 및 개선 우선순위**
 
         **취약한 유형 통계 및 개선 방향**:
-        - 각 PR 리뷰에서 지적된 취약점을 분석하고, 취약점의 분포를 표시하세요.
-        - 가능한 경우, 다음과 같은 세부 사항을 포함하세요:
-          - **취약점 유형 문제점**
+        - 각 PR 리뷰에서 지정된 문제가 되는 평가 기준 중 가장 많이 포함된 평가 기준을 "취약 문제 유형"으로 3가지 제공하고, 취약점의 분포를 표시하세요.
+        - 출력에서는 다음과 같은 세부 사항을 포함하세요:
+          - **취약 문제 유형**
           - **개선 방향**
-          - **안좋은 예시와 좋은 예시**
+          - **개선 전 코드, 개선 후 코드**
 
         ---
 
@@ -138,19 +141,19 @@ class UserReportAPIView(APIView):
 
         **2-4. 종합 결론**
 
-        - **총평**:
-          - 프로젝트의 전체적 성향 및 평균 등급을 출력하고 ~~부분에서 개선 여지가 가장 크다 라는 식의 독려하는 말투로 취약점 개선에 힘을 실어주세요.
-            - **강점**: 프로젝트 또는 코드의 긍정적인 점을 3개 이상 작성하세요.
-            - **약점**: 코드에서 개선이 필요한 점을 3개 이상 작성하세요.
-            - **향후 권장 사항**:
-          - ~~모드를 사용하며 사용자가 키워야 할 역량에 대해 알려주세요.
+        - **총평**
+          - 프로젝트의 전체적 성향을 출력하고 ~~부분에서 개선 여지가 가장 크다 라는 식의 독려하는 말투로 취약점 개선에 힘을 실어줄 수 있는 평가를 출력해주세요.
+            - **강점** 프로젝트 또는 코드의 긍정적인 점을 3개 이상 작성하세요.
+            - **약점** 코드에서 개선이 필요한 점을 3개 이상 작성하세요.
+            - **향후 권장 사항**: ~~모드를 사용하며 사용자가 키워야 할 역량에 대해 알려주세요.
 
         ---
 
         **첨부 자료**
 
         - 추천 학습 자료
-        - 관련 예시 코드
+        - 학습 자료는 자료 이름과 url을 출력하세요. 단, "자료 이름" 이라는 텍스트와 "url"이라는 설명을 덧붙이진 않습니다. 자료 이름 앞 뒤로 ** 문자를 추가하세요.
+        
         """
 
         # DeepSeek API 요청
@@ -197,15 +200,46 @@ class UserReportAPIView(APIView):
             logger.error(f"API 호출 실패: {e}")
             return {"error": "API 호출 실패", "details": str(e)}
 
-    def generate_styled_pdf(self, report_title, report_data):
+    @staticmethod
+    def generate_styled_pdf(report_title, report_data):
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=letter)
 
+        # 스타일 정의
         styles = getSampleStyleSheet()
         styles['Normal'].fontName = 'NanumGothic'
-        styles['Heading1'].fontName = 'NanumGothic'
-        styles['Heading2'].fontName = 'NanumGothic'
+        styles['Heading1'].fontName = 'NanumGothic-Bold'
+        styles['Heading1'].fontSize = 16
+        styles['Heading2'].fontName = 'NanumGothic-Bold'
+        styles['Heading2'].fontSize = 14
         styles['BodyText'].fontName = 'NanumGothic'
+        styles['BodyText'].fontSize = 10
+
+        code_style = ParagraphStyle(
+            name="Code",
+            fontName="NanumGothic",
+            fontSize=9,
+            leading=16,
+            spaceAfter=0,
+            backColor=colors.lightgrey,
+        )
+
+        bold_style = ParagraphStyle(
+            name="Bold",
+            fontName="NanumGothic-Bold",
+            fontSize=10,
+            leading=12,
+            spaceAfter=6,
+        )
+
+        emphasis_style = ParagraphStyle(
+            name="Emphasis",
+            fontName="NanumGothic-Bold",
+            fontSize=15,
+            textColor=colors.darkgrey,
+            leading=18,
+            spaceAfter=8,
+        )
 
         elements = []
 
@@ -213,58 +247,95 @@ class UserReportAPIView(APIView):
         elements.append(Paragraph(f"<strong>{report_data['title']}</strong>", styles['Heading1']))
         elements.append(Spacer(1, 12))
         elements.append(Paragraph(f"<strong>작성자:</strong> {report_data['author']}", styles['Normal']))
-        elements.append(Paragraph(f"<strong>작성일자:</strong> {report_data['created_date']}", styles['Normal']))
+        elements.append(
+            Paragraph(f"<strong>작성일자:</strong> {report_data['created_date'].split(' ')[0]}", styles['Normal']))
         elements.append(Spacer(1, 24))
 
-        # 리뷰 데이터 요약
-        elements.append(Paragraph("1. 리뷰 데이터 요약", styles['Heading2']))
-        elements.append(Spacer(1, 12))
-
-        # 테이블 데이터 변환
-        table_data = [["PR ID", "제목", "평균 등급", "작성일자"]] + [
-            [
-                item["id"],
-                Paragraph(item["title"], styles['Normal']),  # 제목을 Paragraph로 처리
-                item["aver_grade"],
-                item["created_at"].split(" ")[0]
+        # 1번 테이블: 리뷰 데이터 요약
+        if "review_table" in report_data and report_data["review_table"]:
+            table_data = [["PR ID", "제목", "평균 등급", "작성일자"]] + [
+                [
+                    item["id"],
+                    Paragraph(item["title"][:30] + "..." if len(item["title"]) > 30 else item["title"],
+                              styles['Normal']),
+                    item["aver_grade"],
+                    item["created_at"].split(" ")[0],
+                ]
+                for item in report_data["review_table"]
             ]
-            for item in report_data["review_table"]
-        ]
+            table = Table(table_data, colWidths=[50, 200, 70, 100])
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.darkgrey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, -1), 'NanumGothic'),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ]))
+            elements.append(table)
+            elements.append(Spacer(1, 24))
 
-        # Table 생성 및 스타일 적용
-        table = Table(table_data, colWidths=[50, 300, 70, 100])  # 제목 칸 확장
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, -1), 'NanumGothic'),  # NanumGothic 폰트 적용
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ]))
-        elements.append(table)
-        elements.append(Spacer(1, 24))
-
-        # 분석 내용
+        # 2번 분석 내용
         elements.append(Paragraph("2. 분석 내용", styles['Heading2']))
         elements.append(Spacer(1, 12))
 
-        # 분석 내용을 문단으로 구성
-        analysis_lines = report_data["analysis"].split("<\n>")
-        for line in analysis_lines:
-            if line.strip():
-                if line.startswith("-"):
-                    elements.append(Paragraph(f"<strong>{line.strip()}</strong>", styles['Normal']))
-                else:
-                    elements.append(Paragraph(line.strip(), styles['BodyText']))
-            elements.append(Spacer(1, 6))
-        elements.append(Spacer(1, 24))
+        analysis_lines = report_data["analysis"].splitlines()
+        in_code_block = False
 
-        # 결론
+        for line in analysis_lines:
+            line = line.strip()
+            if line.startswith("```"):
+                in_code_block = not in_code_block
+                if in_code_block:
+                    elements.append(Spacer(1, 6))
+                continue
+
+            if in_code_block:
+                elements.append(Paragraph(line, code_style))
+            elif line == "---":  # 긴 줄 출력
+                table = Table([[" "]], colWidths=[450])
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, -1), colors.white),  # 흰색 배경
+                    ('LINEBELOW', (0, 0), (-1, -1), 1, colors.black),  # 검은색 선
+                ]))
+                elements.append(table)
+            elif line.startswith("2-"):  # 강조 텍스트
+                elements.append(Paragraph(line, emphasis_style))
+            elif "**" in line:  # 굵은 텍스트 처리
+                parts = []
+                bold_open = False
+                for part in line.split("**"):
+                    if bold_open:
+                        parts.append(f"<font name='NanumGothic-Bold'>{part.strip()}</font>")
+                    else:
+                        parts.append(part.strip())
+                    bold_open = not bold_open
+                elements.append(Paragraph(" ".join(parts), styles['BodyText']))
+            elif line.startswith("https://"):  # 링크 스타일 추가
+                link_paragraph = Paragraph(
+                    f'<a href="{line}" color="blue">{line}</a>',
+                    ParagraphStyle(
+                        name="LinkStyle",
+                        fontName="NanumGothic",
+                        fontSize=10,
+                        textColor=colors.blue,
+                        underline=True,
+                        spaceAfter=6,
+                    )
+                )
+                elements.append(link_paragraph)
+            elif line.startswith("- "):
+                elements.append(Paragraph(f"• {line[2:].strip()}", styles['BodyText']))
+            else:
+                elements.append(Paragraph(line, styles['BodyText']))
+
+        elements.append(Spacer(1, 24))
 
         # PDF 생성
         doc.build(elements)
         buffer.seek(0)
         return buffer
+
 
     def post(self, request, user_id):
         try:
@@ -308,13 +379,16 @@ class UserReportAPIView(APIView):
 
 
             # PDF 생성 및 저장
+            # PDF 생성 및 저장
             relative_pdf_path = f"report/reports/{now().strftime('%Y%m%d%H%M%S')}_report.pdf"
             BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             absolute_pdf_path = os.path.join(BASE_DIR, relative_pdf_path)
 
             os.makedirs(os.path.dirname(absolute_pdf_path), exist_ok=True)
             with open(absolute_pdf_path, 'wb') as f:
-                f.write(self.generate_styled_pdf(report_title, report_content).getvalue())
+                # Static method 호출 수정
+                pdf_buffer = UserReportAPIView.generate_styled_pdf(report_title, report_content)
+                f.write(pdf_buffer.getvalue())
 
             logger.debug(f"PDF 저장 경로: {absolute_pdf_path}")
 
