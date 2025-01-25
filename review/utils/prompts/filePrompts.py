@@ -32,7 +32,7 @@ CLEAN_PROMPT = '''
 
     ## 출력 예시
     [
-        "score": "8",
+        "score": "5",
         "review": "1. 함수 이름이 명확하지 않습니다.\n   개선된 코드:\n```python\n   def calculate_sum(a, b):\n       return a + b\n```\n\n2. 주석이 부족합니다.\n   개선된 코드:\n```python\n   # 두 숫자의 합을 계산합니다.\n```"
     ]
 '''
@@ -170,7 +170,7 @@ STUDY_PROMPT = '''
 
     ## 출력 예시
     [
-        "score": "8",
+        "score": "3",
         "review": "1. 데이터 구조 선택이 적절하지 않습니다.\n   개선된 코드:\n```python\n   from collections import deque\n   queue = deque()\n```"
     ]
 '''

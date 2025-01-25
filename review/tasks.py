@@ -73,15 +73,36 @@ def process_code_review(pr_review_id, access_token, repo_name, pr_number, commit
         print(f"Error in process_code_review: {str(e)}")
 
 
+@shared_task(max_retries=3)
+def get_pr_files(access_token, repo_name, pr_number):
+    """
+    PR의 모든 파일 정보를 가져오는 함수
+    """
+    GITHUB_TOKEN = access_token
+    GITHUB_API_URL = "https://api.github.com"
+
+    url = f"{GITHUB_API_URL}/repos/{repo_name}/pulls/{pr_number}/files"
+    print("get_url:", url)
+    headers = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception(f"Failed to retrieve PR files: {response.status_code}, {response.text}")
+
+
+
 @shared_task(ignore_result=True, max_retries=3)
 def run_file_review(file_info, pr_review_id, access_token, repo_name, pr_number, commit_id):
     try:
         file_path = file_info["filename"]
         file_content = download_file_content(file_info["raw_url"])
         pr_review = PRReview.objects.get(id=pr_review_id)
+        review_mode = pr_review.review_mode
 
         # AI API를 사용하여 파일 리뷰 수행
-        review_result = file_code_review(pr_review.review_mode, file_content)
+        review_result = file_code_review(review_mode, file_content)
         review_text, score = get_score_review_text(review_result)
 
         # 파일 리뷰 저장
@@ -96,6 +117,7 @@ def run_file_review(file_info, pr_review_id, access_token, repo_name, pr_number,
 
         # PR 파일 리뷰 결과를 댓글로 추가
         comment_data = {
+            "review_mode": review_mode,
             "commit_id": commit_id,
             "access_token": access_token,
             "repo_name": repo_name,
@@ -121,6 +143,7 @@ def run_only_file_review(file_info, review_mode, access_token, repo_name, pr_num
         review_text, score = get_score_review_text(review_result)
 
         comment_data = {
+            "review_mode": review_mode,
             "commit_id": commit_id,
             "access_token": access_token,
             "repo_name": repo_name,
@@ -170,7 +193,7 @@ def run_pr_review(file_review_results, pr_review_id, access_token, repo_name, pr
         print(f"PRReview 업데이트 완료: {pr_review}")
 
         # 등급에 따라 상태 업데이트
-        state = "failure" if pr_review.aver_grade.strip() in {"A", "B", "C", "D"} else "success"
+        state = "failure" if pr_review.aver_grade.strip() in {"B", "C", "D"} else "success"
         description = "PR 평균 등급이 기준 이하입니다." if state == "failure" else "PR이 품질 기준을 충족합니다."
 
         # 디버깅 출력
@@ -221,7 +244,8 @@ def post_comment_to_pr(comment_data):
     """
     comment = comment_data["comment"]
     file_path = comment_data["file_path"]
-    score = comment_data["score"] // 1
+    score = int(comment_data["score"])
+    review_mode = comment_data["review_mode"]
     if "리뷰할 내용이 없습니다" in comment:
         print(f"Skipping comment for {file_path}: 리뷰할 내용이 없습니다.")
         return
@@ -237,7 +261,8 @@ def post_comment_to_pr(comment_data):
 
     # 요청 데이터 생성
     data = {
-        "body": f"**Score**: {score}/10\n"
+        "body": f"**Mode**: {review_mode}\n"
+                f"**Score**: {score} / 10\n"
                 f"**Grade**: {get_grade(score)}\n\n"
                 f"{formatted_comment}",  # 줄바꿈 처리된 리뷰 본문
         "path": file_path,  # 파일 경로
@@ -253,23 +278,61 @@ def post_comment_to_pr(comment_data):
         print(f"Failed to post comment: {response.status_code}, {response.text}")
 
 
+
 @shared_task(max_retries=3)
-def get_pr_files(access_token, repo_name, pr_number):
-    """
-    PR의 모든 파일 정보를 가져오는 함수
-    """
-    GITHUB_TOKEN = access_token
-    GITHUB_API_URL = "https://api.github.com"
+def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result, review_mode, aver_grade):
+    url = f"https://api.github.com/repos/{repo_name}/issues/{pr_number}/comments"
 
-    url = f"{GITHUB_API_URL}/repos/{repo_name}/pulls/{pr_number}/files"
-    print("get_url:", url)
-    headers = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
-    response = requests.get(url, headers=headers)
+    # Extract review data
+    total_review = extract_pattern(
+        r'"total_review":\s*"([\s\S]*?)"', pr_review_result, ""
+    ).replace("```", "").strip()  # 백틱 제거
+    problem_type = extract_pattern(
+        r'"problem_type":\s*"([^"]*?)"', pr_review_result, ""
+    )
 
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise Exception(f"Failed to retrieve PR files: {response.status_code}, {response.text}")
+    # Format the total review (split into readable lines)
+    formatted_total_review = format_review(total_review)
+
+    # Compose the comment body
+    comment_body = f"""
+## 📝 PR 리뷰 총평
+
+### 🔍 **총평**
+{formatted_total_review}
+
+### 🚩 **주요 문제 유형**
+- {problem_type or "특별한 문제 유형이 없습니다."}
+
+### 📊 **모드 및 평균 등급**
+- 리뷰 모드: {review_mode or "모드 정보 없음"}
+- 평균 등급: {aver_grade or "평가 점수 없음"}
+
+---
+💡 **Tip**: '{problem_type or "개선 사항"}'에 대한 개선점을 중점적으로 고려하세요.
+    """.strip()  # 전체 텍스트 양 끝의 공백 제거
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+    data = {
+        "body": comment_body.strip()
+    }
+
+    try:
+        # Check final comment body before sending
+        print("Final Comment Body Sent to GitHub:")
+        print(comment_body)
+
+        # Post to GitHub
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        print("PR에 총평 댓글이 성공적으로 작성되었습니다.")
+    except requests.exceptions.RequestException as e:
+        print(f"PR 댓글 작성 중 오류 발생: {str(e)}")
+
+    return formatted_total_review
 
 
 def sanitize_code_snippet(code_snippet):
@@ -350,61 +413,6 @@ def update_pr_status(repo_name, sha, state, description, context, access_token):
         print(f"PR 상태 업데이트 성공: {state}")
     else:
         print(f"PR 상태 업데이트 실패: {response.status_code}, {response.text}")
-
-@shared_task(max_retries=3)
-def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result, review_mode, aver_grade):
-    url = f"https://api.github.com/repos/{repo_name}/issues/{pr_number}/comments"
-
-    # Extract review data
-    total_review = extract_pattern(
-        r'"total_review":\s*"([\s\S]*?)"', pr_review_result, ""
-    ).replace("```", "").strip()  # 백틱 제거
-    problem_type = extract_pattern(
-        r'"problem_type":\s*"([^"]*?)"', pr_review_result, ""
-    )
-
-    # Format the total review (split into readable lines)
-    formatted_total_review = format_review(total_review)
-
-    # Compose the comment body
-    comment_body = f"""
-## 📝 PR 리뷰 총평
-
-### 🔍 **총평**
-{formatted_total_review}
-
-### 🚩 **주요 문제 유형**
-- {problem_type or "특별한 문제 유형이 없습니다."}
-
-### 📊 **모드 및 평균 등급**
-- 리뷰 모드: {review_mode or "모드 정보 없음"}
-- 평균 등급: {aver_grade or "평가 점수 없음"}
-
----
-💡 **Tip**: '{problem_type or "개선 사항"}'에 대한 개선점을 중점적으로 고려하세요.
-    """.strip()  # 전체 텍스트 양 끝의 공백 제거
-
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Accept": "application/vnd.github.v3+json",
-    }
-    data = {
-        "body": comment_body.strip()
-    }
-
-    try:
-        # Check final comment body before sending
-        print("Final Comment Body Sent to GitHub:")
-        print(comment_body)
-
-        # Post to GitHub
-        response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()
-        print("PR에 총평 댓글이 성공적으로 작성되었습니다.")
-    except requests.exceptions.RequestException as e:
-        print(f"PR 댓글 작성 중 오류 발생: {str(e)}")
-
-    return formatted_total_review
 
 
 
