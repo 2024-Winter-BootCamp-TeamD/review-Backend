@@ -1,4 +1,6 @@
 import json
+
+import requests
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from pullrequest.models import PRReview
@@ -80,3 +82,4 @@ def github_webhook(request):
 
     except KeyError as e:
         return JsonResponse({"message": f"Missing key: {str(e)}"}, status=400)
+
