@@ -1,14 +1,10 @@
 import json
 
 from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from user.models import User
 from django.http import StreamingHttpResponse
 import time
 import requests
 from django.conf import settings
-from .models import CodeReview
 from user.models import User
 
 class PartReviewView(APIView):
@@ -60,10 +56,8 @@ class PartReviewView(APIView):
         payload = {
             "model": "deepseek-chat",
             "messages": [
-                {"role": "system",
-                 "content": f"당신은 '{review_mode}' 모드에서 코드를 검토하는 전문 리뷰어입니다. {review_mode} 모드의 코드 작성 지향 방향을 중점으로, 개선 사항과 권장 사항을 한국어로 상세히 작성하세요."},
-                {"role": "user",
-                 "content": f"다음은 {review_mode} 모드로 검토해야 할 코드입니다. 이 코드는 특정 목적을 위해 작성되었으며, 개선점을 지적해주세요.\n\n{code_snippet}"}
+                {"role": "system", "content": f"당신은 '{review_mode}' 모드에서 코드를 검토하는 전문 리뷰어입니다. {review_mode} 모드의 코드 작성 지향 방향을 중점으로, 개선 사항과 권장 사항을 한국어로 상세히 작성하세요."},
+                {"role": "user", "content": f"다음은 {review_mode} 모드로 검토해야 할 코드입니다. 이 코드는 특정 목적을 위해 작성되었으며, 개선점을 지적해주세요.\n\n{code_snippet}"}
             ],
             "stream": True
         }

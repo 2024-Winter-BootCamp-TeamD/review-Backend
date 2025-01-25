@@ -1,7 +1,6 @@
 import json
 import re
 import requests
-from pullrequest.models import FileReview, PRReview
 
 
 def download_file_content(file_url):
@@ -16,36 +15,32 @@ def download_file_content(file_url):
 
 
 def get_grade(score):
-    if 1 <= score < 3:
-        return "D"
-    elif 3 <= score < 5:
-        return "C"
-    elif 5 <= score < 7:
-        return "B"
-    elif 7 <= score < 9:
-        return "A"
-    elif 9 <= score <= 10:
-        return "S"
-    else:
-        return "Unknown"  # 1 미만 또는 10 초과인 경우
+    grade_mapping = {
+        1: "D", 2: "D",
+        3: "C", 4: "C",
+        5: "B", 6: "B",
+        7: "A", 8: "A",
+        9: "S", 10: "S",
+    }
+    return grade_mapping.get(score, "Unknown")
 
 
 def get_problem_type(pr_review_result):
     try:
-        # JSON 파싱, problem_type 추출
+        # JSON 파싱
         review_data = json.loads(pr_review_result)
         problem_type = review_data.get("problem_type", None)
 
         if problem_type:
             print("problem_type:", problem_type)
-            return problem_type
         else:
             print("problem_type not found.")
-            return None
-    except json.JSONDecodeError:
-        print("Invalid JSON format. Falling back to regex.")
 
-    return extract_pattern(r'"problem_type":\s*"([^"]*)"', pr_review_result)
+    except json.JSONDecodeError:
+        problem_type = extract_pattern(r'"problem_type":\s*"([^"]*)"', pr_review_result)
+        print("Invalid JSON format. problem_type(regex):", problem_type)
+
+    return problem_type
 
 
 # review에서 text와 score 추출
