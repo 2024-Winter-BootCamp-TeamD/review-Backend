@@ -64,7 +64,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'review',
     'drf_yasg',
-    'corsheaders'
+    'corsheaders',
+    'django_prometheus',
 ]
 
 CORS_ALLOWED_ORIGINS = [
@@ -112,6 +113,8 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
