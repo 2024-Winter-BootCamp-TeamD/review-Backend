@@ -93,7 +93,7 @@ def get_pr_files(access_token, repo_name, pr_number):
 
 
 
-@shared_task(ignore_result=True, max_retries=3)
+@shared_task(max_retries=3)
 def run_file_review(file_info, pr_review_id, access_token, repo_name, pr_number, commit_id):
     try:
         file_path = file_info["filename"]
@@ -132,7 +132,7 @@ def run_file_review(file_info, pr_review_id, access_token, repo_name, pr_number,
     except Exception as e:
         print(f"Error in process_file_review for file {file_info['filename']}: {str(e)}")
 
-@shared_task(ignore_result=True, max_retries=3)
+@shared_task(max_retries=3)
 def run_only_file_review(file_info, review_mode, access_token, repo_name, pr_number, commit_id):
     try:
         file_path = file_info["filename"]
@@ -161,7 +161,7 @@ def run_only_file_review(file_info, review_mode, access_token, repo_name, pr_num
         print(f"Error in process_file_review for file {file_info['filename']}: {str(e)}")
 
 # PR 리뷰 수행
-@shared_task
+@shared_task(ignore_result=True, max_retries=3)
 def run_pr_review(file_review_results, pr_review_id, access_token, repo_name, pr_number, commit_id):
     try:
         pr_review = PRReview.objects.get(id=pr_review_id)
@@ -216,7 +216,7 @@ def run_pr_review(file_review_results, pr_review_id, access_token, repo_name, pr
 
 
 # PR 리뷰 수행
-@shared_task
+@shared_task(ignore_result=True, max_retries=3)
 def run_only_pr_review(review_mode, file_review_results, access_token, repo_name, pr_number):
     try:
         # 파일 리뷰 결과 집계
@@ -279,7 +279,7 @@ def post_comment_to_pr(comment_data):
 
 
 
-@shared_task(max_retries=3)
+@shared_task(ignore_result=True, max_retries=3)
 def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result, review_mode, aver_grade):
     url = f"https://api.github.com/repos/{repo_name}/issues/{pr_number}/comments"
 
@@ -332,7 +332,6 @@ def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result
     except requests.exceptions.RequestException as e:
         print(f"PR 댓글 작성 중 오류 발생: {str(e)}")
 
-    return formatted_total_review
 
 
 def sanitize_code_snippet(code_snippet):
@@ -413,9 +412,6 @@ def update_pr_status(repo_name, sha, state, description, context, access_token):
         print(f"PR 상태 업데이트 성공: {state}")
     else:
         print(f"PR 상태 업데이트 실패: {response.status_code}, {response.text}")
-
-
-
 
 
 
