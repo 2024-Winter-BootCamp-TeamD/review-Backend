@@ -4,26 +4,32 @@ global:
 
 scrape_configs:
   - job_name: "prometheus"
+    scheme: http
     static_configs:
       - targets: ["prometheus:9090"]
 
   - job_name: "django"
+    scheme: http
     static_configs:
       - targets: ["django:8000"]
     metrics_path: "/metrics"
 
   - job_name: "nginx"
+    scheme: http
     static_configs:
       - targets: ["nginx:80"]
 
   - job_name: "redis"
+    scheme: http
     static_configs:
       - targets: ["redis:6379"]
 
   - job_name: "node-exporter"
+    scheme: http
     static_configs:
       - targets: ["node-exporter:9100"]
 
   - job_name: "cadvisor"
+    scheme: http
     static_configs:
       - targets: ["cadvisor:8080"]
