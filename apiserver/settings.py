@@ -39,6 +39,7 @@ ALLOWED_HOSTS = [
     '34.44.174.202'
     'www.refactory.store',
     'bfd5-61-255-49-90.ngrok-free.app',
+    'nginx'
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # credentials 허용
