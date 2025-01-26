@@ -37,7 +37,7 @@ ALLOWED_HOSTS = [
     '17f6-221-151-106-114.ngrok-free.app',
     'refactory.store',
     'www.refactory.store',
-    'bfd5-61-255-49-90.ngrok-free.app',
+    'b3c1-61-255-49-90.ngrok-free.app',
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # credentials 허용

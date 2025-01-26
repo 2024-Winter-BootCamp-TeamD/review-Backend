@@ -244,12 +244,12 @@ class PRReviewSelectView(APIView):
         if not queryset:
             return success_response({"data": {}})
 
-        # 데이터 직렬화
         serialized_data = [
             {
                 "id": review.id,
                 "title": review.title,
                 "aver_grade": review.aver_grade,
+                "problem_type": review.problem_type if review.problem_type else "N/A",  # 문제 유형 추가
                 "created_at": review.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             }
             for review in queryset
