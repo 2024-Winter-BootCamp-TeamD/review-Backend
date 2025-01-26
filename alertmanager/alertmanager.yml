@@ -11,7 +11,7 @@ route:
 receivers:
   - name: "slack-notifications"
     slack_configs:
-      - api_url: "https://hooks.slack.com/services/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" # Slack 웹훅 URL로 교체
+      - api_url: "https://hooks.slack.com/services/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" # Slack 웹훅 URL로 교체
         channel: "#alerts" # 알림을 받을 슬랙 채널
         send_resolved: true
         title: "{{ .GroupLabels.alertname }}"
