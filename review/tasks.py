@@ -235,7 +235,7 @@ def run_pr_review(file_review_results, pr_review_id, access_token, repo_name, pr
         print(f"PRReview 업데이트 완료: {pr_review}")
 
         # 등급에 따라 상태 업데이트
-        state = "failure" if pr_review.aver_grade.strip() in {"A", "B", "C", "D"} else "success"
+        state = "failure" if pr_review.aver_grade.strip() in {"B", "C", "D"} else "success"
         description = "PR 평균 등급이 기준 이하입니다." if state == "failure" else "PR이 품질 기준을 충족합니다."
 
         # 디버깅 출력
