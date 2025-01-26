@@ -5,17 +5,17 @@ global:
 scrape_configs:
   - job_name: "prometheus"
     static_configs:
-      - targets: ["localhost:9090"]
+      - targets: ["refactory.store:9090"]
 
   - job_name: "django"
     static_configs:
-      - targets: ["django:8000"]
+      - targets: ["refactory.store:8000"]
     metrics_path: "/metrics"
 
   - job_name: "nginx"
     static_configs:
-      - targets: ["nginx:80"]
+      - targets: ["refactory.store:80"]
 
   - job_name: "redis"
     static_configs:
-      - targets: ["redis:6379"]
+      - targets: ["refactory.store:6379"]
