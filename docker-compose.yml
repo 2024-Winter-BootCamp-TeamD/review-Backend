@@ -111,6 +111,17 @@ services:
       - nginx
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
+  nginx-exporter: #서비스 이름
+    image: nginx/nginx-prometheus-exporter:latest #엑스포터 이미지
+    container_name: nginx-exporter #컨테이너 이름
+    ports:
+      - "9113:9113" #엑스포터 포트. 포트/metrics로 데이터를 노출시킵니다.
+    command: --nginx.scrape-uri=http://nginx:80/stub_status # 엔진엑스 /stub_status에서 데이터를 가지고 오라는 설정.
+    depends_on:
+      - nginx #엔진엑스가 작동해야지 이거도 쓸모가 있겠죠?
+    networks:
+      - app-tier #엔진엑스와 같은 네트워크
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus

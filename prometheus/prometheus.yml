@@ -4,20 +4,13 @@ global:
 
 scrape_configs:
   - job_name: "prometheus"
-    scheme: http
     static_configs:
       - targets: ["prometheus:9090"]
 
   - job_name: "django"
-    scheme: http
     static_configs:
       - targets: ["nginx:80"] # Nginx를 통해 Django 메트릭 수집
     metrics_path: "/metrics"
-
-  - job_name: "redis"
-    scheme: http
-    static_configs:
-      - targets: ["redis:6379"]
 
   - job_name: "node-exporter"
     scheme: http
