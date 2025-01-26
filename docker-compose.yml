@@ -32,19 +32,19 @@ services:
     networks:
       - app-tier
 
-  phpmyadmin:
-    image: phpmyadmin
-    restart: always
-    links:
-      - mysqldb
-    ports:
-      - 8080:80
-    environment:
-      PMA_ARBITRARY: 1
-      PMA_HOST: mysqldb
-      PMA_PORT: 3306
-    networks:
-      - app-tier
+  # phpmyadmin:
+  #   image: phpmyadmin
+  #   restart: always
+  #   links:
+  #     - mysqldb
+  #   ports:
+  #     - 8080:80
+  #   environment:
+  #     PMA_ARBITRARY: 1
+  #     PMA_HOST: mysqldb
+  #     PMA_PORT: 3306
+  #   networks:
+  #     - app-tier
 
   redis:
     image: "redis:latest"
