@@ -182,17 +182,17 @@ services:
     networks:
       - app-tier
 
-alertmanager: #이미지
-  image: prom/alertmanager:main
-  container_name: alertmanager
-  ports:
-    - "9093:9093" #포트 9093 매핑
-  volumes:
-    - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml #설정파일 볼륨 추가
-    - ./alertmanager/tmp:/data/ #데이터 담기 전용
-  networks:
-    - app-network #같은 네트워크
-  command: --config.file=/etc/alertmanager/alertmanager.yml --log.level=debug #설정파일 설정
+  alertmanager: #이미지
+    image: prom/alertmanager:main
+    container_name: alertmanager
+    ports:
+      - "9093:9093" #포트 9093 매핑
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml #설정파일 볼륨 추가
+      - ./alertmanager/tmp:/data/ #데이터 담기 전용
+    networks:
+      - app-network #같은 네트워크
+    command: --config.file=/etc/alertmanager/alertmanager.yml --log.level=debug #설정파일 설정
 
 volumes:
   mysqldata: # 로컬 디렉토리를 지정했으므로, 익명 볼륨 제거 가능
