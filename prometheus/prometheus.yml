@@ -9,7 +9,12 @@ scrape_configs:
 
   - job_name: "django"
     static_configs:
-      - targets: ["nginx:80"] # Nginx를 통해 Django 메트릭 수집
+      - targets: ["django:8000"] # Nginx를 통해 Django 메트릭 수집
+    metrics_path: "/metrics"
+
+  - job_name: "nginx" # nginx-exporter 추가
+    static_configs:
+      - targets: ["nginx-exporter:9113"]
     metrics_path: "/metrics"
 
   - job_name: "node-exporter"
