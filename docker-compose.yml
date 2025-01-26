@@ -195,8 +195,6 @@ services:
     command: --config.file=/etc/alertmanager/alertmanager.yml --log.level=debug #설정파일 설정
     env_file:
       - .env # 환경변수 파일 추가
-    environment:
-      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL} # 환경변수 전달
 
 volumes:
   mysqldata: # 로컬 디렉토리를 지정했으므로, 익명 볼륨 제거 가능
