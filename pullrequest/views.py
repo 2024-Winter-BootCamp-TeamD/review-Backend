@@ -211,3 +211,30 @@ class PRReviewCategoryStatisticsView(APIView):
         review_mode_count = list(queryset.values('review_mode').annotate(count=Count('review_mode')).order_by('-count'))
 
         return success_response({"statistics": {item['review_mode']: item['count'] for item in review_mode_count}})
+
+
+class PRReviewSelectView(APIView):
+    def get(self, request):
+        prreview_ids = request.query_params.get('prreview_ids')
+        try:
+            prreview_ids = [int(id.strip()) for id in prreview_ids.split(',') if id.strip().isdigit()]
+        except ValueError:
+            return error_response("PRReview ID가 잘못되었습니다.", status_code=status.HTTP_400_BAD_REQUEST)
+
+        queryset = filter_pr_reviews(request.query_params.get('user_id')).filter(id__in=prreview_ids)
+        if not queryset:
+            return success_response({"data": {}})
+
+        # 데이터 직렬화
+        serialized_data = [
+            {
+                "id": review.id,
+                "title": review.title,
+                "aver_grade": review.aver_grade,
+                "problem_type": review.problem_type if review.problem_type else "N/A",  # 문제 유형 추가
+                "created_at": review.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+            for review in queryset
+        ]
+
+        return success_response({"data": serialized_data})
