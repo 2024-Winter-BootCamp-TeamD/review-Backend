@@ -11,8 +11,8 @@ route:
 receivers:
   - name: "slack-notifications"
     slack_configs:
-      - api_url: "${SLACK_WEBHOOK_URL}" # Slack 웹훅 URL로 교체
-        channel: "#alerts" # 알림을 받을 슬랙 채널
+      - api_url: "SLACK_WEBHOOK_URL" # 환경변수 직접 참조 대신 실제 URL 사용
+        channel: "#alerts"
         send_resolved: true
         title: "{{ .GroupLabels.alertname }}"
         text: "{{ range .Alerts }}*Alert:* {{ .Annotations.summary }}\n*Description:* {{ .Annotations.description }}\n*Severity:* {{ .Labels.severity }}\n{{ end }}"
