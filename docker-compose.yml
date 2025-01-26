@@ -191,7 +191,7 @@ services:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml #설정파일 볼륨 추가
       - ./alertmanager/tmp:/data/ #데이터 담기 전용
     networks:
-      - app-network #같은 네트워크
+      - app-tier #같은 네트워크
     command: --config.file=/etc/alertmanager/alertmanager.yml --log.level=debug #설정파일 설정
 
 volumes:
