@@ -11,7 +11,7 @@ route:
 receivers:
   - name: "slack-notifications"
     slack_configs:
-      - api_url: ${{secrets.SLACK_WEBHOOK_URL}} # 환경 변수 사용
+      - api_url: "{{ .SLACK_WEBHOOK_URL }}" # 환경변수 참조 방법
         channel: "#alerts"
         send_resolved: true
         title: "{{ .GroupLabels.alertname }}"
