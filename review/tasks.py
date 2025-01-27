@@ -35,7 +35,7 @@ def process_only_code_review(review_mode, access_token, repo_name, pr_number, co
 
         # 파일 리뷰 결과를 PR 총평 생성 및 저장으로 전달
         chain(
-            file_review_tasks | run_only_pr_review.s(review_mode, access_token, repo_name, pr_number)
+            file_review_tasks | run_only_pr_review.s(review_mode, access_token, repo_name, pr_number, commit_id)
         ).apply_async()
     except Exception as e:
         print(f"Error in process_pr_code_review: {str(e)}")
@@ -226,20 +226,20 @@ def run_pr_review(file_review_results, pr_review_id, access_token, repo_name, pr
         pr_review.aver_grade = aver_grade
 
         # 문제 유형 추출
-        if aver_grade != 'S':
-            problem_type = get_problem_type(pr_review_result)
-            if problem_type:
-                pr_review.problem_type = problem_type
+        # if aver_grade != 'S': 프론트에서 하기로
+        problem_type = get_problem_type(pr_review_result)
+        if problem_type:
+            pr_review.problem_type = problem_type
 
         pr_review.save()
         print(f"PRReview 업데이트 완료: {pr_review}")
 
         # 등급에 따라 상태 업데이트
-        state = "failure" if pr_review.aver_grade.strip() in {"B", "C", "D"} else "success"
+        state = "failure" if aver_grade.strip() in {"B", "C", "D"} else "success"
         description = "PR 평균 등급이 기준 이하입니다." if state == "failure" else "PR이 품질 기준을 충족합니다."
 
         # 디버깅 출력
-        print(f"PR 상태 설정: {state}, 평균 등급: {pr_review.aver_grade}")
+        print(f"PR 상태 설정: {state}, 평균 등급: {aver_grade}")
 
         update_pr_status(
             repo_name=repo_name,
@@ -259,7 +259,7 @@ def run_pr_review(file_review_results, pr_review_id, access_token, repo_name, pr
 
 # PR 리뷰 수행
 @shared_task(ignore_result=True, max_retries=3)
-def run_only_pr_review(review_mode, file_review_results, access_token, repo_name, pr_number):
+def run_only_pr_review(file_review_results, review_mode, access_token, repo_name, pr_number, commit_id):
     try:
         # 파일 리뷰 결과 집계
         total_score = sum(result["score"] for result in file_review_results if result)
@@ -273,6 +273,23 @@ def run_only_pr_review(review_mode, file_review_results, access_token, repo_name
         post_pr_summary_comment(
             access_token, repo_name, pr_number, pr_review_result, review_mode, aver_grade
         )
+
+        # 등급에 따라 상태 업데이트
+        state = "failure" if aver_grade.strip() in {"B", "C", "D"} else "success"
+        description = "PR 평균 등급이 기준 이하입니다." if state == "failure" else "PR이 품질 기준을 충족합니다."
+
+        # 디버깅 출력
+        print(f"PR 상태 설정: {state}, 평균 등급: {aver_grade}")
+
+        update_pr_status(
+            repo_name=repo_name,
+            sha=commit_id,
+            state=state,
+            description=description,
+            context="Code Quality Check",
+            access_token=access_token,
+        )
+        print(f"PR 리뷰 상태 업데이트 완료: {state}, 등급: {aver_grade}")
 
     except Exception as e:
         print(f"Error in process_only_pr_review: {e}")

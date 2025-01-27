@@ -250,6 +250,7 @@ class PRReviewSelectView(APIView):
                 "title": review.title,
                 "aver_grade": review.aver_grade,
                 "problem_type": review.problem_type if review.problem_type else "N/A",  # 문제 유형 추가
+                "category": review.review_mode,
                 "created_at": review.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             }
             for review in queryset
