@@ -29,7 +29,7 @@ def github_webhook(request):
         return JsonResponse({"message": "Closed pull request"}, status=400)
 
     sender = data.get('sender', {})
-    sender_username = sender.get('login')
+    sender_username = sender.get('login').strip()
 
     repository_github_id = data.get('repository', {}).get('id')
     if not repository_github_id:
@@ -38,6 +38,10 @@ def github_webhook(request):
     try:
         repository = Repository.objects.get(repository_github_id=repository_github_id)
         hook_owner = User.objects.get(id=repository.user_id_id)
+        pr_author = pr['user']['login'].strip()
+        print(f"Sender: '{sender_username}', Hook Owner: '{hook_owner.github_username}', PR Author: '{pr_author}'")
+        # django | Sender: 'einhn', Hook Owner: 'User object (1)', PR Author: 'ryujeonghun'
+        # django | repo_name: 2024 - Winter - BootCamp - TeamD / review - Backend
 
         repo_name = data['repository']['full_name']
         commit_id = data['pull_request']['head']['sha']
@@ -46,10 +50,9 @@ def github_webhook(request):
 
         access_token = hook_owner.access_token
         review_mode = hook_owner.review_mode
-        print(f"Sender's Username, Hook Owner: {sender_username}, {hook_owner.github_username}")
         print(f"review mode: {review_mode}")
 
-        if sender_username == hook_owner.github_username:
+        if sender_username == hook_owner.github_username == pr_author:
             pr_review = PRReview(
                 user=hook_owner,
                 title=pr['title'],

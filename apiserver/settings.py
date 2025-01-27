@@ -32,11 +32,10 @@ ALLOWED_HOSTS = [
     'django',
     '127.0.0.1',  # 로컬 개발
     'localhost',  # 로컬 개발
-    '374d-175-210-241-78.ngrok-free.app',  # ngrok 도메인 추가
     "chrome-extension://flpheaheemmfidkdnokahgmfpehnldkn",  # 확장 프로그램의 origin
     'refactory.store',
     'www.refactory.store',
-    'b4e8-221-151-106-114.ngrok-free.app',
+    '6565-221-151-106-114.ngrok-free.app', # ngrok 도메인 추가
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # credentials 허용
