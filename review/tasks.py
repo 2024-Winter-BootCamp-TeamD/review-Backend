@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 from celery import shared_task, group, chain
 from pullrequest.models import PRReview, FileReview
@@ -9,6 +10,9 @@ from review.common import download_file_content, get_grade, get_score_review_tex
 
 # 리뷰 대상 파일 확장자
 SUPPORTED_EXTENSIONS = {".py", ".java", ".jsx", ".js"}
+
+# 시간 제한
+TIMEOUT_SECONDS = 300
 
 @shared_task(ignore_result=True, max_retries=3)
 def process_only_code_review(review_mode, access_token, repo_name, pr_number, commit_id):
@@ -35,7 +39,9 @@ def process_only_code_review(review_mode, access_token, repo_name, pr_number, co
 
         # 파일 리뷰 결과를 PR 리뷰 태스크로 전달
         chain(
-            file_review_tasks | run_only_pr_review.s(review_mode, access_token, repo_name, pr_number, commit_id)
+            file_review_tasks |
+            skip_pr_review_if_timeout.s(None, access_token, repo_name, pr_number) |
+            run_only_pr_review.s(review_mode, access_token, repo_name, pr_number, commit_id)
         ).apply_async()
     except Exception as e:
         print(f"Error in process_pr_code_review: {str(e)}")
@@ -66,7 +72,9 @@ def process_code_review(pr_review_id, access_token, repo_name, pr_number, commit
 
         # 파일 리뷰 결과를 PR 리뷰 태스크로 전달
         chain(
-            file_review_tasks | run_pr_review.s(pr_review_id, access_token, repo_name, pr_number, commit_id)
+            file_review_tasks |
+            skip_pr_review_if_timeout.s(None, access_token, repo_name, pr_number) |
+            run_pr_review.s(pr_review_id, access_token, repo_name, pr_number, commit_id)
         ).apply_async()
 
     except Exception as e:
@@ -95,6 +103,7 @@ def get_pr_files(access_token, repo_name, pr_number):
 @shared_task(max_retries=3)
 def run_file_review(file_info, pr_review_id, access_token, repo_name, pr_number, commit_id):
     try:
+        start_time = time.time()
         file_path = file_info["filename"]
         file_content = download_file_content(file_info["raw_url"])
         pr_review = PRReview.objects.get(id=pr_review_id)
@@ -102,8 +111,13 @@ def run_file_review(file_info, pr_review_id, access_token, repo_name, pr_number,
 
         # AI API를 사용하여 파일 리뷰 수행
         review_result = file_code_review(review_mode, file_content)
-        review_text, score = get_score_review_text(review_result)
 
+        elapsed_time = time.time() - start_time
+        if elapsed_time > TIMEOUT_SECONDS:
+            print(f"Timeout: Skipping file review for {file_path}.")
+            return None
+
+        review_text, score = get_score_review_text(review_result)
         # 파일 리뷰 저장
         file_review = FileReview(
             pr_review=pr_review,
@@ -134,11 +148,18 @@ def run_file_review(file_info, pr_review_id, access_token, repo_name, pr_number,
 @shared_task(max_retries=3)
 def run_only_file_review(file_info, review_mode, access_token, repo_name, pr_number, commit_id):
     try:
+        start_time = time.time()
         file_path = file_info["filename"]
         file_content = download_file_content(file_info["raw_url"])
 
         # AI API를 사용하여 파일 리뷰 수행
         review_result = file_code_review(review_mode, file_content)
+
+        elapsed_time = time.time() - start_time
+        if elapsed_time > TIMEOUT_SECONDS:
+            print(f"Timeout: Skipping file review for {file_path}.")
+            return None
+
         review_text, score = get_score_review_text(review_result)
 
         comment_data = {
@@ -158,6 +179,7 @@ def run_only_file_review(file_info, review_mode, access_token, repo_name, pr_num
 
     except Exception as e:
         print(f"Error in process_file_review for file {file_info['filename']}: {str(e)}")
+
 
 
 @shared_task(ignore_result=True, max_retries=3)
@@ -192,13 +214,41 @@ def post_comment_to_pr(comment_data):
         "commit_id": comment_data['commit_id'],  # 커밋 ID
         "subject_type": "file",  # 추가된 코드는 RIGHT, 삭제된 코드는 LEFT
     }
-
     # GitHub API로 댓글 추가 요청
     response = requests.post(url, headers=headers, json=data)
     if response.status_code == 201:
         print(f"Comment successfully posted on {file_path}.")
     else:
         print(f"Failed to post comment: {response.status_code}, {response.text}")
+
+
+
+@shared_task(max_retries=3)
+def skip_pr_review_if_timeout(file_review_results, access_token, repo_name, pr_number):
+    """
+    모든 파일 리뷰가 타임아웃되었는지 확인 후 PR 리뷰를 중단, 메시지를 GitHub에 직접 작성
+    """
+    if not file_review_results or all(result is None for result in file_review_results):
+        print("All file reviews skipped due to timeout. Skipping PR review.")
+
+        # GitHub API로 타임아웃 메시지 댓글 작성
+        url = f"https://api.github.com/repos/{repo_name}/issues/{pr_number}/comments"
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        try:
+            response = requests.post(url, headers=headers, json={
+                "body": f"**타임아웃 경고**: AI API 응답 시간이 초과되어 파일 리뷰가 중단되었습니다.",
+            })
+            if response.status_code == 201:
+                print(f"Timeout comment successfully posted.")
+            else:
+                print(f"Failed to post timeout comment: {response.status_code}, {response.text}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error posting timeout comment: {str(e)}")
+
+        return None  # Celery 체인 중단
+
+    return file_review_results
 
 
 
