@@ -20,7 +20,6 @@ jobs:
         if: github.ref == 'refs/heads/deploy' && github.event_name == 'push'
         uses: appleboy/ssh-action@v1.1.0
         with:
-        env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           host: ${{ secrets.GCP_HOST }}
           username: ${{ secrets.GCP_USER }}
