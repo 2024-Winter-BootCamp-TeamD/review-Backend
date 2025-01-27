@@ -34,7 +34,7 @@ CLEAN_PROMPT = '''
 
     ## 출력 예시
     {
-        "score": "5",
+        "score": "3",
         "review": "1. 함수 이름이 명확하지 않습니다.\n   개선된 코드:\n```python\n   def calculate_sum(a, b):\n       return a + b\n```\n\n2. 주석이 부족합니다.\n   개선된 코드:\n```python\n   # 두 숫자의 합을 계산합니다.\n```"
     }
 '''
@@ -60,19 +60,19 @@ OPTIMIZE_PROMPT = '''
 
     ## 출력 형식
     출력 형식은 반드시 JSON 형태로 제공하며, 각 key는 다음과 같이 구성한다.
-    [
+    {
         "score": " ",
         "review": " "
-    ]
+    }
     - "review" 필드에는 문제점과 개선 사항을 번호로 구분하여 작성한다.
     - 코드 스니펫은 Markdown 코드 블록(```python`)으로 감싸고, 줄바꿈은 반드시 `\\n`으로 처리한다. "\ 이 절대 단독으로 사용되지 않도록 한다."
     - JSON 바깥에 텍스트를 출력하지 않는다.
 
     ## 출력 예시
-    [
-        "score": "5",
+    {
+        "score": "3",
         "review": "1. 시간복잡도가 높은 반복문이 발견되었습니다.\n   개선된 코드:\n```python\n   for item in sorted(data):\n       process(item)\n```"
-    ]
+    }
 '''
 
 BASIC_PROMPT = '''
@@ -94,19 +94,19 @@ BASIC_PROMPT = '''
 
     ## 출력 형식
     출력 형식은 반드시 JSON 형태로 제공하며, 각 key는 다음과 같이 구성한다.
-    [
+    {
         "score": " ",
         "review": " "
-    ]
+    }
     - "review" 필드에는 문제점과 개선 사항을 번호로 구분하여 작성한다.
     - 코드 스니펫은 Markdown 코드 블록(```python`)으로 감싸고, 줄바꿈은 반드시 `\\n`으로 처리한다. "\ 이 절대 단독으로 사용되지 않도록 한다."
     - JSON 바깥에 텍스트를 출력하지 않는다.
 
     ## 출력 예시
-    [
+    {
         "score": "9",
         "review": "1. 함수의 가독성을 위해 변수명을 명확히 수정해야 합니다.\n   개선된 코드:\n```python\n   def calculate_sum_of_numbers(num1, num2):\n       return num1 + num2\n```"
-    ]
+    }
 '''
 
 NEWBIE_PROMPT = '''
@@ -128,19 +128,19 @@ NEWBIE_PROMPT = '''
 
     ## 출력 형식
     출력 형식은 반드시 JSON 형태로 제공하며, 각 key는 다음과 같이 구성한다.
-    [
+    {
         "score": " ",
         "review": " "
-    ]
+    }
     - "review" 필드에는 문제점과 개선 사항을 번호로 구분하여 작성한다.
     - 코드 스니펫은 Markdown 코드 블록(```python`)으로 감싸고, 줄바꿈은 반드시 `\\n`으로 처리한다. "\ 이 절대 단독으로 사용되지 않도록 한다."
     - JSON 바깥에 텍스트를 출력하지 않는다.
 
     ## 출력 예시
-    [
+    {
         "score": "6",
         "review": "1. 조건문에서 불필요한 비교가 있습니다.\n   개선된 코드:\n```python\n   if value:\n       print(\"Value is True\")\n```"
-    ]
+    }
 '''
 
 STUDY_PROMPT = '''
@@ -162,17 +162,17 @@ STUDY_PROMPT = '''
 
     ## 출력 형식
     출력 형식은 반드시 JSON 형태로 제공하며, 각 key는 다음과 같이 구성한다.
-    [
+    {
         "score": " ",
         "review": " "
-    ]
+    }
     - "review" 필드에는 문제점과 개선 사항을 번호로 구분하여 작성한다.
     - 코드 스니펫은 Markdown 코드 블록(```python`)으로 감싸고, 줄바꿈은 반드시 `\\n`으로 처리한다. "\ 이 절대 단독으로 사용되지 않도록 한다."
     - JSON 바깥에 텍스트를 출력하지 않는다.
 
     ## 출력 예시
-    [
+    {
         "score": "3",
         "review": "1. 데이터 구조 선택이 적절하지 않습니다.\n   개선된 코드:\n```python\n   from collections import deque\n   queue = deque()\n```"
-    ]
+    }
 '''

@@ -17,7 +17,7 @@ def get_file_prompt(review_mode):
                "newbie": NEWBIE_PROMPT,
                "study": STUDY_PROMPT, }
     if review_mode not in prompts:
-        raise ValueError(f"Invalid review_mode: {review_mode}. Valid modes are {list(prompts.keys())}.")
+        raise ValueError(f"Invalid review_mode: {review_mode}")
     return prompts[review_mode]
 
 def file_code_review(review_mode, code):

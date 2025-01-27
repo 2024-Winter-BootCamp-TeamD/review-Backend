@@ -21,7 +21,7 @@ def github_webhook(request):
         return JsonResponse({"message": "Invalid JSON"}, status=400)
 
     # PR 이벤트 처리
-    action = data.get('action')  # PR 오픈 / PR 리오픈 / PR 클로즈
+    action = data.get('action')  # PR 오픈 / 리오픈 / 클로즈
     pr = data.get('pull_request')
     print(action)
     # action과 pr이 유효하지 않은 경우 종료
@@ -40,8 +40,6 @@ def github_webhook(request):
         hook_owner = User.objects.get(id=repository.user_id_id)
         pr_author = pr['user']['login'].strip()
         print(f"Sender: '{sender_username}', Hook Owner: '{hook_owner.github_username}', PR Author: '{pr_author}'")
-        # django | Sender: 'einhn', Hook Owner: 'User object (1)', PR Author: 'ryujeonghun'
-        # django | repo_name: 2024 - Winter - BootCamp - TeamD / review - Backend
 
         repo_name = data['repository']['full_name']
         commit_id = data['pull_request']['head']['sha']

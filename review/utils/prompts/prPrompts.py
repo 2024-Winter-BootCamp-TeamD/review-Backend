@@ -21,11 +21,11 @@ CLEAN_PROMPT = '''
 
     ## 출력 형식
     출력 형식은 JSON 형태로 작성한다. 답안은 JSON 형식만 포함하며, 다음의 키를 포함한다:
-    [
+    {
         "problem_type": "가장 많이 발생한 문제 유형",
         "review_mode": "{review_mode}",
         "total_review": "총평 내용"
-    ]
+    }
 '''
 
 OPTIMIZE_PROMPT = '''
@@ -50,11 +50,11 @@ OPTIMIZE_PROMPT = '''
 
     ## 출력 형식
     출력 형식은 JSON 형태로 작성한다. 답안은 JSON 형식만 포함하며, 다음의 키를 포함한다:
-    [
+    {
         "problem_type": "가장 많이 발생한 문제 유형",
         "review_mode": "{review_mode}",
         "total_review": "총평 내용"
-    ]
+    }
 '''
 
 BASIC_PROMPT = '''
@@ -79,11 +79,11 @@ BASIC_PROMPT = '''
 
     ## 출력 형식
     출력 형식은 JSON 형태로 작성한다. 답안은 JSON 형식만 포함하며, 다음의 키를 포함한다:
-    [
+    {
         "problem_type": "가장 중요한 문제 유형",
         "review_mode": "{review_mode}",
         "total_review": "총평 내용"
-    ]
+    }
 '''
 
 NEWBIE_PROMPT = '''
