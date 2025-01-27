@@ -452,3 +452,4 @@ $RECYCLE.BIN/
 .idea
 data
 certbot
+alertmanager
