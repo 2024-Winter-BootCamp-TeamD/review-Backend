@@ -5,7 +5,7 @@ from pullrequest.models import PRReview, FileReview
 from .utils.fileReview import file_code_review
 from .utils.prReview import get_pr_review
 from review.common import download_file_content, get_grade, get_score_review_text, get_problem_type, \
-    extract_pattern
+    extract_pattern, format_review, update_pr_status
 
 # 리뷰 대상 파일 확장자
 SUPPORTED_EXTENSIONS = {".py", ".java", ".jsx", ".js"}
@@ -35,7 +35,7 @@ def process_only_code_review(review_mode, access_token, repo_name, pr_number, co
 
         # 파일 리뷰 결과를 PR 총평 생성 및 저장으로 전달
         chain(
-            file_review_tasks | run_only_pr_review.s(review_mode, access_token, repo_name, pr_number)
+            file_review_tasks | run_only_pr_review.s(review_mode, access_token, repo_name, pr_number, commit_id)
         ).apply_async()
     except Exception as e:
         print(f"Error in process_pr_code_review: {str(e)}")
@@ -226,20 +226,20 @@ def run_pr_review(file_review_results, pr_review_id, access_token, repo_name, pr
         pr_review.aver_grade = aver_grade
 
         # 문제 유형 추출
-        if aver_grade != 'S':
-            problem_type = get_problem_type(pr_review_result)
-            if problem_type:
-                pr_review.problem_type = problem_type
+        # if aver_grade != 'S': 프론트에서 하기로
+        problem_type = get_problem_type(pr_review_result)
+        if problem_type:
+            pr_review.problem_type = problem_type
 
         pr_review.save()
         print(f"PRReview 업데이트 완료: {pr_review}")
 
         # 등급에 따라 상태 업데이트
-        state = "failure" if pr_review.aver_grade.strip() in {"A", "B", "C", "D"} else "success"
+        state = "failure" if aver_grade.strip() in {"B", "C", "D"} else "success"
         description = "PR 평균 등급이 기준 이하입니다." if state == "failure" else "PR이 품질 기준을 충족합니다."
 
         # 디버깅 출력
-        print(f"PR 상태 설정: {state}, 평균 등급: {pr_review.aver_grade}")
+        print(f"PR 상태 설정: {state}, 평균 등급: {aver_grade}")
 
         update_pr_status(
             repo_name=repo_name,
@@ -259,7 +259,7 @@ def run_pr_review(file_review_results, pr_review_id, access_token, repo_name, pr
 
 # PR 리뷰 수행
 @shared_task(ignore_result=True, max_retries=3)
-def run_only_pr_review(review_mode, file_review_results, access_token, repo_name, pr_number):
+def run_only_pr_review(file_review_results, review_mode, access_token, repo_name, pr_number, commit_id):
     try:
         # 파일 리뷰 결과 집계
         total_score = sum(result["score"] for result in file_review_results if result)
@@ -273,6 +273,23 @@ def run_only_pr_review(review_mode, file_review_results, access_token, repo_name
         post_pr_summary_comment(
             access_token, repo_name, pr_number, pr_review_result, review_mode, aver_grade
         )
+
+        # 등급에 따라 상태 업데이트
+        state = "failure" if aver_grade.strip() in {"B", "C", "D"} else "success"
+        description = "PR 평균 등급이 기준 이하입니다." if state == "failure" else "PR이 품질 기준을 충족합니다."
+
+        # 디버깅 출력
+        print(f"PR 상태 설정: {state}, 평균 등급: {aver_grade}")
+
+        update_pr_status(
+            repo_name=repo_name,
+            sha=commit_id,
+            state=state,
+            description=description,
+            context="Code Quality Check",
+            access_token=access_token,
+        )
+        print(f"PR 리뷰 상태 업데이트 완료: {state}, 등급: {aver_grade}")
 
     except Exception as e:
         print(f"Error in process_only_pr_review: {e}")
@@ -333,85 +350,4 @@ def post_pr_summary_comment(access_token, repo_name, pr_number, pr_review_result
         print(f"PR 댓글 작성 중 오류 발생: {str(e)}")
 
     return formatted_total_review
-
-
-
-def sanitize_code_snippet(code_snippet):
-    if not code_snippet:
-        return ""
-    # 역슬래시(`\`)와 기타 특수 문자를 Markdown-safe 형태로 변환
-    sanitized = (
-        code_snippet.replace("\\", "\\\\")  # 역슬래시를 임시 대체
-        .replace("`", "\\`")  # 백틱을 이스케이프 처리
-        .replace("\n", "\\n")  # 줄바꿈을 JSON-safe 형태로 변환
-    )
-    return sanitized
-
-
-def restore_code_snippet(sanitized_snippet):
-    if not sanitized_snippet:
-        return ""
-    return (
-        sanitized_snippet.replace("\\\\", "\\")  # 역슬래시 복원
-        .replace("\\n", "\n")  # 줄바꿈 복원
-        .replace("\\`", "`")  # 백틱 복원
-    )
-
-
-def format_review(review_text, line_length=150):
-    if not review_text:
-        return "리뷰 내용이 없습니다."
-
-    formatted_lines = []
-    in_code_block = False
-
-    for line in review_text.split("\\n"):  # JSON에서 줄바꿈 분리
-        # 코드 블록 시작/끝 감지
-        if line.startswith("```python") or line.startswith("```"):
-            in_code_block = not in_code_block
-            formatted_lines.append(line)
-            continue
-
-        if in_code_block:
-            # 코드 블록 내 특수 문자 변환
-            sanitized_line = sanitize_code_snippet(line)
-            formatted_lines.append(sanitized_line)
-        else:
-            # 코드 블록 외부에서는 기본 줄바꿈 처리
-            words = line.split(" ")
-            current_line = []
-            current_length = 0
-
-            for word in words:
-                if current_length + len(word) + 1 > line_length:
-                    formatted_lines.append(" ".join(current_line))
-                    current_line = [word]
-                    current_length = len(word)
-                else:
-                    current_line.append(word)
-                    current_length += len(word) + 1
-
-            if current_line:
-                formatted_lines.append(" ".join(current_line))
-
-    formatted_text = "\n".join(formatted_lines)
-    return restore_code_snippet(formatted_text)
-
-def update_pr_status(repo_name, sha, state, description, context, access_token):
-    """
-    PR 상태를 업데이트하는 함수.
-    """
-    url = f"https://api.github.com/repos/{repo_name}/statuses/{sha}"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    data = {
-        "state": state,  # "success", "failure", or "pending"
-        "description": description,
-        "context": context,
-    }
-    print(f"GitHub 상태 업데이트 요청: {data}")
-    response = requests.post(url, headers=headers, json=data)
-    if response.status_code == 201:
-        print(f"PR 상태 업데이트 성공: {state}")
-    else:
-        print(f"PR 상태 업데이트 실패: {response.status_code}, {response.text}")
 
