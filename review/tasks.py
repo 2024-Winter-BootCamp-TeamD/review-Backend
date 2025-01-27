@@ -33,7 +33,7 @@ def process_only_code_review(review_mode, access_token, repo_name, pr_number, co
             for file_info in valid_files
         )
 
-        # 파일 리뷰 결과를 PR 총평 생성 및 저장으로 전달
+        # 파일 리뷰 결과를 PR 리뷰 태스크로 전달
         chain(
             file_review_tasks | run_only_pr_review.s(review_mode, access_token, repo_name, pr_number, commit_id)
         ).apply_async()
@@ -64,7 +64,7 @@ def process_code_review(pr_review_id, access_token, repo_name, pr_number, commit
             for file_info in valid_files
         )
 
-        # 파일 리뷰 결과를 PR 총평 생성 및 저장으로 전달
+        # 파일 리뷰 결과를 PR 리뷰 태스크로 전달
         chain(
             file_review_tasks | run_pr_review.s(pr_review_id, access_token, repo_name, pr_number, commit_id)
         ).apply_async()
@@ -207,18 +207,18 @@ def post_comment_to_pr(comment_data):
 def run_pr_review(file_review_results, pr_review_id, access_token, repo_name, pr_number, commit_id):
     try:
         pr_review = PRReview.objects.get(id=pr_review_id)
-
+        review_mode = pr_review.review_mode
         # 파일 리뷰 결과 집계
         total_score = sum(result["score"] for result in file_review_results if result)
         aver_grade = get_grade(total_score // len(file_review_results))
         gather_reviews = "".join(result["review_text"] for result in file_review_results if result)
 
         # PR 총평 생성
-        pr_review_result = get_pr_review(gather_reviews, pr_review.review_mode)
+        pr_review_result = get_pr_review(gather_reviews, review_mode)
 
         # PR 총평 댓글 추가
         total_review = post_pr_summary_comment(
-            access_token, repo_name, pr_number, pr_review_result, pr_review.review_mode, aver_grade
+            access_token, repo_name, pr_number, pr_review_result, review_mode, aver_grade
         )
 
         # PRReview 업데이트
