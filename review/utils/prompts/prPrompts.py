@@ -4,7 +4,6 @@ CLEAN_PROMPT = '''
 
     ## 입력 데이터
     - 리뷰 내용: {review}
-    - 평균 등급: {aver_grade}
     - 리뷰 모드: clean
 
     ## 규칙
@@ -22,12 +21,11 @@ CLEAN_PROMPT = '''
 
     ## 출력 형식
     출력 형식은 JSON 형태로 작성한다. 답안은 JSON 형식만 포함하며, 다음의 키를 포함한다:
-    [
-        "average_grade": " ",
+    {
         "problem_type": "가장 많이 발생한 문제 유형",
         "review_mode": "{review_mode}",
         "total_review": "총평 내용"
-    ]
+    }
 '''
 
 OPTIMIZE_PROMPT = '''
@@ -36,7 +34,6 @@ OPTIMIZE_PROMPT = '''
 
     ## 입력 데이터
     - 리뷰 내용: {review}
-    - 평균 등급: {aver_grade}
     - 리뷰 모드: optimize
 
     ## 규칙
@@ -53,12 +50,11 @@ OPTIMIZE_PROMPT = '''
 
     ## 출력 형식
     출력 형식은 JSON 형태로 작성한다. 답안은 JSON 형식만 포함하며, 다음의 키를 포함한다:
-    [
-        "average_grade": " ",
+    {
         "problem_type": "가장 많이 발생한 문제 유형",
         "review_mode": "{review_mode}",
         "total_review": "총평 내용"
-    ]
+    }
 '''
 
 BASIC_PROMPT = '''
@@ -67,7 +63,6 @@ BASIC_PROMPT = '''
 
     ## 입력 데이터
     - 리뷰 내용: {review}
-    - 평균 등급: {aver_grade}
     - 리뷰 모드: basic
 
     ## 규칙
@@ -84,12 +79,11 @@ BASIC_PROMPT = '''
 
     ## 출력 형식
     출력 형식은 JSON 형태로 작성한다. 답안은 JSON 형식만 포함하며, 다음의 키를 포함한다:
-    [
-        "average_grade": " ",
+    {
         "problem_type": "가장 중요한 문제 유형",
         "review_mode": "{review_mode}",
         "total_review": "총평 내용"
-    ]
+    }
 '''
 
 NEWBIE_PROMPT = '''
@@ -98,7 +92,6 @@ NEWBIE_PROMPT = '''
 
     ## 입력 데이터
     - 리뷰 내용: {review}
-    - 평균 등급: {aver_grade}
     - 리뷰 모드: newbie
 
     ## 규칙
@@ -116,7 +109,6 @@ NEWBIE_PROMPT = '''
     ## 출력 형식
     출력 형식은 JSON 형태로 작성한다. 답안은 JSON 형식만 포함하며, 다음의 키를 포함한다:
     [
-        "average_grade": " ",
         "problem_type": "가장 중요한 문제 유형",
         "review_mode": "{review_mode}",
         "total_review": "총평 내용"
@@ -129,7 +121,6 @@ STUDY_PROMPT = '''
 
     ## 입력 데이터
     - 리뷰 내용: {review}
-    - 평균 등급: {aver_grade}
     - 리뷰 모드: study
 
     ## 규칙
@@ -147,7 +138,6 @@ STUDY_PROMPT = '''
     ## 출력 형식
     출력 형식은 JSON 형태로 작성한다. 답안은 JSON 형식만 포함하며, 다음의 키를 포함한다:
     [
-        "average_grade": " ",
         "problem_type": "가장 중요한 문제 유형",
         "review_mode": "{review_mode}",
         "total_review": "총평 내용"

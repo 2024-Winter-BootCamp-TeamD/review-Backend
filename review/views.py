@@ -1,4 +1,6 @@
 import json
+
+import requests
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from pullrequest.models import PRReview
@@ -19,7 +21,7 @@ def github_webhook(request):
         return JsonResponse({"message": "Invalid JSON"}, status=400)
 
     # PR 이벤트 처리
-    action = data.get('action')  # PR 오픈 / PR 리오픈 / PR 클로즈
+    action = data.get('action')  # PR 오픈 / 리오픈 / 클로즈
     pr = data.get('pull_request')
     print(action)
     # action과 pr이 유효하지 않은 경우 종료
@@ -27,7 +29,7 @@ def github_webhook(request):
         return JsonResponse({"message": "Closed pull request"}, status=400)
 
     sender = data.get('sender', {})
-    sender_username = sender.get('login')
+    sender_username = sender.get('login').strip()
 
     repository_github_id = data.get('repository', {}).get('id')
     if not repository_github_id:
@@ -36,6 +38,8 @@ def github_webhook(request):
     try:
         repository = Repository.objects.get(repository_github_id=repository_github_id)
         hook_owner = User.objects.get(id=repository.user_id_id)
+        pr_author = pr['user']['login'].strip()
+        print(f"Sender: '{sender_username}', Hook Owner: '{hook_owner.github_username}', PR Author: '{pr_author}'")
 
         repo_name = data['repository']['full_name']
         commit_id = data['pull_request']['head']['sha']
@@ -44,10 +48,9 @@ def github_webhook(request):
 
         access_token = hook_owner.access_token
         review_mode = hook_owner.review_mode
-        print(f"Sender's Username, Hook Owner: {sender_username}, {hook_owner.github_username}")
         print(f"review mode: {review_mode}")
 
-        if sender_username == hook_owner.github_username:
+        if sender_username == hook_owner.github_username == pr_author:
             pr_review = PRReview(
                 user=hook_owner,
                 title=pr['title'],
@@ -80,3 +83,4 @@ def github_webhook(request):
 
     except KeyError as e:
         return JsonResponse({"message": f"Missing key: {str(e)}"}, status=400)
+
