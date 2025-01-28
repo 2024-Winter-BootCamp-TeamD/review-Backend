@@ -61,7 +61,7 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
 ---
 
 ## 🔑 ERD  
- 
+![image.png](attachment:f4ece012-40a8-469b-9a3e-e24fd2c976dd:image.png)
 
 ---
 
@@ -71,7 +71,7 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
 | **프론트엔드**     | React, Vite  |
 | **백엔드**         | Django REST Framework, MySQL                   |  
 | **비동기 처리**     | Celery, RabbitMQ                               |  
-| **배포**           | AWS EC2, Docker, GitHub Actions                |  
+| **배포**           | GCP, Docker, GitHub Actions                |  
 | **모니터링**       | Prometheus, Grafana                            |  
 | **AI 도구**        | OpenAI, Deepseek                               |  
 | **기타**           | Postman, Swagger, Figma, Notion, Slack         |  
@@ -79,7 +79,7 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
 ---
 
 ## 📗 API  
-
+![스크린샷 2025-01-29 오전 2.16.06.png](attachment:465a6ce3-3f9c-4a21-a3dc-2fb40dcfb090:스크린샷_2025-01-29_오전_2.16.06.png)
 
 ---
 
