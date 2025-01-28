@@ -35,7 +35,7 @@ ALLOWED_HOSTS = [
     "chrome-extension://flpheaheemmfidkdnokahgmfpehnldkn",  # 확장 프로그램의 origin
     'refactory.store',
     'www.refactory.store',
-    '3068-61-255-49-90.ngrok-free.app', # ngrok 도메인 추가
+    '55a9-221-151-106-114.ngrok-free.app', # ngrok 도메인 추가
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # credentials 허용
