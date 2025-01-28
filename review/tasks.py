@@ -12,7 +12,7 @@ from review.common import download_file_content, get_grade, get_score_review_tex
 SUPPORTED_EXTENSIONS = {".py", ".java", ".jsx", ".js"}
 
 # 시간 제한
-TIMEOUT_SECONDS = 300
+TIMEOUT_SECONDS = 3
 
 @shared_task(ignore_result=True, max_retries=3)
 def process_only_code_review(review_mode, access_token, repo_name, pr_number, commit_id):
@@ -40,7 +40,7 @@ def process_only_code_review(review_mode, access_token, repo_name, pr_number, co
         # 파일 리뷰 결과를 PR 리뷰 태스크로 전달
         chain(
             file_review_tasks |
-            skip_pr_review_if_timeout.s(None, access_token, repo_name, pr_number) |
+            skip_pr_review_if_timeout.s(access_token, repo_name, pr_number) |
             run_only_pr_review.s(review_mode, access_token, repo_name, pr_number, commit_id)
         ).apply_async()
     except Exception as e:
@@ -73,7 +73,7 @@ def process_code_review(pr_review_id, access_token, repo_name, pr_number, commit
         # 파일 리뷰 결과를 PR 리뷰 태스크로 전달
         chain(
             file_review_tasks |
-            skip_pr_review_if_timeout.s(None, access_token, repo_name, pr_number) |
+            skip_pr_review_if_timeout.s(access_token, repo_name, pr_number) |
             run_pr_review.s(pr_review_id, access_token, repo_name, pr_number, commit_id)
         ).apply_async()
 
