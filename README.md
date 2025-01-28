@@ -56,12 +56,14 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
 ---
 
 ## 🛠 시스템 아키텍처  
+<img width="1105" alt="arcitecture" src="https://github.com/user-attachments/assets/8ee9a536-c623-4db0-affc-f5100a1744d6" />
 
 
 ---
 
 ## 🔑 ERD  
-![image.png](attachment:f4ece012-40a8-469b-9a3e-e24fd2c976dd:image.png)
+![image](https://github.com/user-attachments/assets/08bb8ccc-3c6b-46b0-aafb-e0fea64485f0)
+
 
 ---
 
@@ -79,7 +81,8 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
 ---
 
 ## 📗 API  
-![스크린샷 2025-01-29 오전 2.16.06.png](attachment:465a6ce3-3f9c-4a21-a3dc-2fb40dcfb090:스크린샷_2025-01-29_오전_2.16.06.png)
+![스크린샷 2025-01-29 오전 2 16 06](https://github.com/user-attachments/assets/f2195bf8-4823-4062-8a70-203f8e59338a)
+
 
 ---
 
