@@ -1,5 +1,9 @@
-# ⚙️ Refactory ⚙️
+<div align="center">
+  
+# ⚙️  **Refactory**  ⚙️
 AI 기반 코드 리뷰 자동화 솔루션  
+
+</div>
 
 ---
 
@@ -63,14 +67,20 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
 ---
 
 ## 🛠 시스템 아키텍처  
+<div align="center">
+
 <img width="1105" alt="arcitecture" src="https://github.com/user-attachments/assets/8ee9a536-c623-4db0-affc-f5100a1744d6" />
 
+</div>
 
 ---
 
 ## 🔑 ERD  
+<div align="center">
+
 ![image](https://github.com/user-attachments/assets/08bb8ccc-3c6b-46b0-aafb-e0fea64485f0)
 
+</div>
 
 ---
 
@@ -86,8 +96,11 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
 ---
 
 ## 📗 API  
+<div align="center">
+  
 ![스크린샷 2025-01-29 오전 2 16 06](https://github.com/user-attachments/assets/f2195bf8-4823-4062-8a70-203f8e59338a)
 
+</div>
 
 ---
 ## 🤔 How to use?
@@ -104,12 +117,14 @@ docker compose up -d --build
 ```
 ---
 ## 👨‍💻 팀원 소개  
+<div align="center">
 
 |            | **서지민**   | **김윤성**   | **장원진**   | **김규리**   | **김아인**   | **류정훈**   | **이융현**   |
-|------------|--------------|--------------|--------------|--------------|--------------|--------------|--------------|
-| **프로필** | |  |  || | | |
-| **역할**   | **Team Leader**<br>Frontend<br>UI/UX<br>DevOps | Frontend<br>UI/UX | Frontend<br>UI/UX | Backend<br>DevOps | Backend<br>DevOps | Backend<br>DevOps | Backend<br>DevOps |
+|:--------------:|:--------------:|:--------------:|:--------------:|:--------------:|:--------------:|:--------------:|:--------------:|
+| **Profile** | |  |  || | | |
+| **Role**   | **Team Leader**<br>Frontend<br>UI/UX<br>DevOps | Frontend<br>UI/UX | Frontend<br>UI/UX | Backend<br>DevOps | Backend<br>DevOps | Backend<br>DevOps | Backend<br>DevOps |
 | **GitHub** | [@Lauiee](https://github.com/Lauiee) | [@Nekerworld](https://github.com/Nekerworld) | [@wonjinjang](https://github.com/wonjinjang) | [@gyuri224](https://github.com/gyuri224) | [@einhin](https://github.com/einhn) | [@RYUJEONGHUN](https://github.com/RYUJEONGHUN) | [@fostacion](https://github.com/fostacion) |
 
+</div>
 
 ---
