@@ -111,7 +111,7 @@ docker compose up -d --build
 |------------|--------------|--------------|--------------|--------------|--------------|--------------|--------------|
 | **프로필** | |  |  || | | |
 | **역할**   | Team Leader<br>Frontend<br>UI/UX<br>DevOps | Frontend<br>UI/UX | Frontend<br>UI/UX | Backend<br>DevOps | Backend<br>DevOps | Backend<br>DevOps | Backend<br>DevOps |
-| **GitHub** | [@Lauiee](https://github.com/Lauiee) | [@Nekerworld](https://github.com/Nekerworld) | [@wonjinjang](https://github.com/wonjinjang) | [@gyuri224](https://github.com/gyuri224) | [@einhin](https://github.com/einhn) | [@RYUJEONGHUN](https://github.com/RYUJEONGHUN) | [@fostacion](https://github.com/fostacion) |
+| **GitHub** | [@Lauiee](https://github.com/Lauiee) | [@Nekerworld](https://github.com/Nekerworld) | [@wonjinjang](https://github.com/wonjinjang) | [@gyuri224](https://github.com/gyuri224) | [@einhin](https://github.com/einhn) | [@RYUJEONGHUN](https://github.com/RYUJEONGHUN) | [@fostacion](https://github.com/fostacion) |
 
 
 ---
