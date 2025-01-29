@@ -439,7 +439,7 @@ class ReportDetailAPIView(APIView):
                 "user_id": report.user_id,
                 "title": report.title,
                 "content": report.content,
-                "pdf_url": report.pdf_url,
+                "pdf_url": report.pdf_url.url if report.pdf_url else None,
                 "review_num": report.review_num,
                 "is_deleted": report.is_deleted,
                 "created_at": report.created_at.strftime('%Y-%m-%d %H:%M:%S'),
@@ -472,29 +472,24 @@ class ReportDeleteAPIView(APIView):
 class ReportDownloadAPIView(APIView):
     def get(self, request, report_id):
         try:
-            # 데이터베이스에서 보고서 조회
             report = Report.objects.filter(report_id=report_id, is_deleted=False).first()
 
-            if not report:
-                return Response({"error_message": "Report not found or already deleted"}, status=status.HTTP_404_NOT_FOUND)
+            if not report or not report.pdf_url:
+                return Response(
+                    {"error_message": "보고서를 찾을 수 없거나 PDF 파일이 없습니다."}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
 
-            # PDF 파일 경로 계산
-            BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            pdf_path = os.path.join(BASE_DIR, report.pdf_url)
-
-            # 파일 존재 여부 확인
-            if not os.path.exists(pdf_path):
-                logger.error(f"PDF 파일을 찾을 수 없습니다: {pdf_path}")
-                return Response({"error_message": "PDF 파일을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
-
-            logger.debug(f"PDF 다운로드: {pdf_path}")
-
-            # 파일 응답 반환
-            return FileResponse(open(pdf_path, 'rb'), as_attachment=True, filename=os.path.basename(pdf_path))
+            return Response({
+                "pdf_url": report.pdf_url.url
+            }, status=status.HTTP_200_OK)
 
         except Exception as e:
-            logger.error(f"PDF 다운로드 중 오류 발생: {e}")
-            return Response({"error_message": "PDF 다운로드 실패"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.error(f"PDF URL 조회 중 오류 발생: {e}")
+            return Response(
+                {"error_message": "PDF URL 조회 실패"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class ReportModeAPIView(APIView):
