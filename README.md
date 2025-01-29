@@ -16,6 +16,7 @@ AI 기반 코드 리뷰 자동화 솔루션
 - ERD  
 - 기술 스택  
 - API
+- Monitoring
 - How to use?
 - 팀원 소개  
 
@@ -101,6 +102,10 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
 ![스크린샷 2025-01-29 오전 2 16 06](https://github.com/user-attachments/assets/f2195bf8-4823-4062-8a70-203f8e59338a)
 
 </div>
+
+---
+## 🖥️ Monitoring
+
 
 ---
 ## 🤔 How to use?
