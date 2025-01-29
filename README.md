@@ -5,21 +5,20 @@ AI 기반 코드 리뷰 자동화 솔루션
 
 ## 📖 목차  
 - 서비스 소개  
-- 주요 기능  
+- 주요 기능
+- Demo
 - Medium 링크  
 - 시스템 아키텍처  
 - ERD  
 - 기술 스택  
-- API  
+- API
+- How to use?
 - 팀원 소개  
 
 ---
 
 ## 🏭 서비스 소개  
 Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써 코드의 품질을 높이고 유지보수를 간편하게 합니다.  
-
-### 사용 방법:  
-
 
 ---
 
@@ -49,7 +48,15 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
   드래그를 통한 실시간 부분 코드 리뷰 기능 제공
 
 ---
+## 📈Demo
+- **메인 페이지**
+- **Github Login**
+- **코드 리뷰**
+- **데이터 시각화**
+- **보고서 생성**
+- **부분 코드 리뷰**
 
+---
 ## 🐳 Medium  
 
 
@@ -70,13 +77,10 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
 ## 💻 기술 스택  
 | 카테고리          | 기술 스택                                       |  
 |-------------------|------------------------------------------------|  
-| **프론트엔드**     | React, Vite  |
-| **백엔드**         | Django REST Framework, MySQL                   |  
-| **비동기 처리**     | Celery, RabbitMQ                               |  
-| **배포**           | GCP, Docker, GitHub Actions                |  
-| **모니터링**       | Prometheus, Grafana                            |  
-| **AI 도구**        | OpenAI, Deepseek                               |  
-| **기타**           | Postman, Swagger, Figma, Notion, Slack         |  
+| **Frontend**     | React, Vite, TypeScripts, Styled components  |
+| **Backend**         | Django REST Framework, MySQL, Celery, RabbitMQ |  
+| **DevOps**           | GCP, Docker, GitHub Actions, Nginx, Deepseek, Amazon S3, Github Webhooks, Github Apps| | **Mornitoring**       | Prometheus, Grafana   |  
+| **기타**           | Postman, Swagger, Figma, Notion, Slack, Zoom, Visualstudiocode, Pycharm |  
 
 ---
 
@@ -85,7 +89,9 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
 
 
 ---
+## 🤔 How to use?
 
+---
 ## 👨‍💻 팀원 소개  
 
 | 사진            | 이름         | 역할           |  
