@@ -4,6 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.utils.timezone import now
+
+from user.models import User
 from .models import Report, ReportPrReview
 from pullrequest.models import PRReview
 from django.core.paginator import Paginator
@@ -21,6 +23,7 @@ import os
 from html import escape
 from reportlab.platypus import Paragraph
 from reportlab.lib.styles import ParagraphStyle
+from django.core.files.base import ContentFile
 
 # 폰트 경로 설정
 FONT_PATH_REGULAR = os.path.join(os.path.dirname(__file__), 'fonts', 'NanumGothic.ttf')
@@ -350,14 +353,14 @@ class UserReportAPIView(APIView):
             if not (5 <= len(pr_ids) <= 10):
                 return Response({"error_message": "pr_ids는 5개에서 10개 사이여야 합니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-            # PR 데이터 조회
+            # PR 데이터 조회 및 검증
             prs = PRReview.objects.filter(id__in=pr_ids, is_deleted=False)
             if len(prs) != len(pr_ids):
                 invalid_ids = list(set(pr_ids) - set(pr.id for pr in prs))
                 return Response({"error_message": f"유효하지 않은 PR ID가 포함되어 있습니다: {invalid_ids}"},
                                 status=status.HTTP_400_BAD_REQUEST)
 
-            # PR 리뷰 데이터 정리
+            # PR 리뷰 데이터 정리 및 보고서 내용 생성
             pr_reviews = [
                 {
                     "id": pr.id,
@@ -372,38 +375,32 @@ class UserReportAPIView(APIView):
                 for pr in prs
             ]
 
-            # DeepSeek API 호출
+            # DeepSeek API 호출하여 보고서 내용 생성
             report_content = self.generate_report_with_deepseek(report_title, pr_reviews)
             if "error" in report_content:
                 return Response({"error_message": report_content["details"]}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+            # PDF 생성
+            pdf_buffer = self.generate_styled_pdf(report_title, report_content)
+            
+            # S3에 업로드할 파일명 생성
+            filename = f"reports/{now().strftime('%Y%m%d%H%M%S')}_report.pdf"
+            user = User.objects.get(id=user_id)
 
-            # PDF 생성 및 저장
-            # PDF 생성 및 저장
-            relative_pdf_path = f"report/reports/{now().strftime('%Y%m%d%H%M%S')}_report.pdf"
-            BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            absolute_pdf_path = os.path.join(BASE_DIR, relative_pdf_path)
-
-            os.makedirs(os.path.dirname(absolute_pdf_path), exist_ok=True)
-            with open(absolute_pdf_path, 'wb') as f:
-                # Static method 호출 수정
-                pdf_buffer = UserReportAPIView.generate_styled_pdf(report_title, report_content)
-                f.write(pdf_buffer.getvalue())
-
-            logger.debug(f"PDF 저장 경로: {absolute_pdf_path}")
-
-            # 보고서 데이터베이스 저장
+            # Report 객체 생성 및 PDF 파일 저장
             report = Report.objects.create(
-                user_id=user_id,
+                user=user,
                 title=report_title,
                 content=report_content,
-                pdf_url=relative_pdf_path,  # 상대 경로만 저장
                 review_num=len(pr_reviews),
                 created_at=now(),
                 updated_at=now()
             )
-
-            logger.debug(f"Report 생성 완료: ID={report.report_id}, pdf_url={report.pdf_url}")
+            
+            # PDF 파일을 S3에 업로드
+            logger.info(f"S3 업로드 시작: filename={filename}")
+            report.pdf_url.save(filename, ContentFile(pdf_buffer.getvalue()), save=True)
+            logger.info(f"S3 업로드 완료. URL: {report.pdf_url.url}")
 
             # PR과 보고서 연결
             for pr in prs:
@@ -415,13 +412,13 @@ class UserReportAPIView(APIView):
                 "user_id": report.user_id,
                 "title": report.title,
                 "content": report_content,
-                "pdf_url": report.pdf_url,
+                "pdf_url": report.pdf_url.url,
                 "review_num": len(pr_reviews),
                 "created_at": report.created_at.isoformat()
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            logger.error(f"보고서 생성 중 오류 발생: {e}")
+            logger.error(f"보고서 생성 중 오류 발생: {e}", exc_info=True)
             return Response({"error_message": f"보고서 생성 실패: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
 

@@ -2,6 +2,11 @@ from django.db import models
 from django.utils.timezone import now
 from pullrequest.models import PRReview  # PRReview를 참조
 from user.models import User
+from storages.backends.s3boto3 import S3Boto3Storage  # 수정된 import
+from django.core.files.base import ContentFile
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Report(models.Model):
@@ -9,7 +14,10 @@ class Report(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # 작성자 정보
     title = models.CharField(max_length=100)  # 보고서 제목
     content = models.TextField()  # 보고서 내용
-    pdf_url = models.CharField(max_length=255)  # PDF URL
+    pdf_url = models.FileField(
+        upload_to='reports/',
+        storage=S3Boto3Storage()  # 직접 S3Boto3Storage 사용
+    )
     review_num = models.IntegerField(default=0)  # 리뷰 총합
     is_deleted = models.BooleanField(default=False)  # 삭제 여부
     created_at = models.DateTimeField(auto_now_add=True)  # 생성 시각
