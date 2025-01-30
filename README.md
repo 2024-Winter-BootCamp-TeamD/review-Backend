@@ -54,11 +54,22 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
 ---
 ## 📈Demo
 - **메인 페이지**
+  
 - **Github Login**
+
 - **코드 리뷰**
+  
 - **데이터 시각화**
+  
 - **보고서 생성**
+  
 - **부분 코드 리뷰**
+  
+<div align="center">
+
+![부분 코드 리뷰 (2)](https://github.com/user-attachments/assets/f2aca9e7-b7c7-4165-99e3-104969cb6d3d)
+
+</div>
 
 ---
 ## 🐳 Medium  
