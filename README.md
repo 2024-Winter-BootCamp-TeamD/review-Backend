@@ -53,21 +53,48 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
 
 ---
 ## 📈Demo
-- **메인 페이지**
+- **메인 기능 페이지**
+<div align="center">
+  
+| 대시보드 | 히스토리 |
+|:--------:|:--------:|
+| <img src="https://github.com/user-attachments/assets/55986d52-2b9f-4fa6-af52-45d815411d07" width="600" height="300"> | <img src="https://github.com/user-attachments/assets/ba4011f9-c317-47f1-9f5b-ecaa3c7a47f5" width="600" height="300"> |
+| **레포지토리** | **리포트** |
+| <img src="https://github.com/user-attachments/assets/7a8a7476-12d4-40f0-80e6-78a7989ec430" width="600" height="300"> | <img src="https://github.com/user-attachments/assets/d710a46d-3b19-4e1a-b948-89c4a59da813" width="600" height="300"> |
+
+
+
+</div>
   
 - **Github Login**
-- <div align="center">
+<div align="center">
 
 ![깃허브 로그인](https://github.com/user-attachments/assets/b946c5c0-9146-4340-a0ca-296dcbdd7629)
 
 </div>
 
 - **코드 리뷰**
+<div align="center">
+
+
+
+</div>
+
 
 - **데이터 시각화**
+<div align="center">
+
+
+
+</div>
+
 
 - **보고서 생성**
+<div align="center">
 
+
+
+</div>
   
 - **부분 코드 리뷰**
   
