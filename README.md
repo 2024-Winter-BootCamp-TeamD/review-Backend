@@ -114,7 +114,39 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
 git clone -b develop --single-branch
 ```
 ```bash
-# Create the .env file
+# Create the .env file in main directory
+
+#mysql 설정
+MYSQL_DATABASE=<YOUR_MYSQL_DATABASE>
+MYSQL_USER=<YOUR_MYSQL_USER>
+MYSQL_ROOT_USER=<YOUR_MYSQL_ROOT_USER>
+MYSQL_PASSWORD=<YOUR_MYSQL_PASSWORD>
+MYSQL_ROOT_PASSWORD=<YOUR_MYSQL_ROOT_PASSWORD>
+
+RABBITMQ_DEFAULT_USER='<YOUR_RABBITMQ_USER>'
+RABBITMQ_DEFAULT_PASS='<YOUR_RABBITMQ_PASSWORD>'
+
+# github oauth 설정
+GITHUB_CLIENT_ID = '<YOUR_GITHUB_CLIENT_ID>'
+GITHUB_CLIENT_SECRET = '<YOUR_GITHUB_CLIENT_SECRET>'
+GITHUB_REDIRECT_URI = ' '  # 예: http://localhost:8000/oauth/callback/
+
+# 로컬 환경에서 웹훅 수신 테스트를 위해 ngork을 이용한 프록시 서버 사용
+GITHUB_WEBHOOK_URL = ' '  # 로컬에서 테스트 중인 웹훅 수신 URL
+
+DEEPSEEK_API_KEY=<YOUR_DEEPSEEK_API_KEY>
+DEEPSEEK_API_URL=' ' # DeepSeek API 요청을 보낼 기본 URL
+
+# S3 Configuration
+AWS_ACCESS_KEY_ID= '<YOUR_AWS_ACCESS_KEY>'
+AWS_SECRET_ACCESS_KEY= '<YOUR_AWS_SECRET_KEY>'
+AWS_STORAGE_BUCKET_NAME= # S3에서 사용할 버킷의 이름 (파일 업로드 및 저장에 사용)
+AWS_S3_REGION_NAME= # S3 버킷이 위치한 AWS 리전
+
+DEPLOY_GITHUB_CLIENT_ID = '<YOUR_GITHUB_CLIENT_ID>'
+DEPLOY_GITHUB_CLIENT_SECRET = '<YOUR_GITHUB_CLIENT_SECRET>'
+DEPLOY_GITHUB_REDIRECT_URI = ' ' # GitHub 로그인 후 사용자를 리디렉션할 URI (OAuth 인증 과정에서 GitHub가 이 URL로 응답을 보냄)
+
 ```
 ```bash
 # build docker
