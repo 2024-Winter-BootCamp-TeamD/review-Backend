@@ -84,6 +84,13 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
 - **데이터 시각화**
 <div align="center">
 
+| 히스토리 그래프 | 이슈 타입 그래프 |
+|:--------:|:--------:|
+| <img src="https://github.com/user-attachments/assets/29f89405-9b92-4eef-a102-7cd6163f622f" width="300"> | <img src="https://github.com/user-attachments/assets/9d978b6c-943f-4ac3-bacc-0f6ea901399a" width="300"> |
+
+| 평균 등급 그래프 |
+|:--------:|
+| <img src="https://github.com/user-attachments/assets/95dab837-3fcd-49e5-a991-ca844a986609" width="500"> |
 
 
 </div>
