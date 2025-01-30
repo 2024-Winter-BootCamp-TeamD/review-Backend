@@ -99,7 +99,9 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
 - **보고서 생성**
 <div align="center">
 
-
+| 보고서 생성 | 보고서 내용 |
+|:--------:|:--------:|
+| <img src="https://github.com/user-attachments/assets/ca294bb3-d370-466c-923e-89d653edd48d" width="400" height="200"> | <img src="https://github.com/user-attachments/assets/cbf28554-fb34-4ab1-929f-a01815fe34e4" width="400" height="200"> |
 
 </div>
   
