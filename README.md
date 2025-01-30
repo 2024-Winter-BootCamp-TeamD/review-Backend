@@ -115,10 +115,13 @@ Refactory는 AI를 활용하여 자동화된 코드 리뷰를 제공함으로써
 
 ---
 ## 🤔 How to use?
+
+**Backend**
 ```bash
 # clone our project
-git clone -b develop --single-branch
+git clone https://github.com/2024-Winter-BootCamp-TeamD/review-Backend.git
 ```
+
 ```bash
 # Create the .env file in main directory
 
@@ -154,9 +157,21 @@ DEPLOY_GITHUB_CLIENT_SECRET = '<YOUR_GITHUB_CLIENT_SECRET>'
 DEPLOY_GITHUB_REDIRECT_URI = ' ' # GitHub 로그인 후 사용자를 리디렉션할 URI (OAuth 인증 과정에서 GitHub가 이 URL로 응답을 보냄)
 
 ```
+
 ```bash
 # build docker
 docker compose up -d --build
+```
+
+**Frontend**
+```bash
+# clone our project
+git clone https://github.com/2024-Winter-BootCamp-TeamD/review-Frontend.git
+```
+
+```bash
+npm i
+npm run build
 ```
 
 ---
