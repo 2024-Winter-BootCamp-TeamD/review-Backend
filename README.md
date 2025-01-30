@@ -147,15 +147,16 @@ DEPLOY_GITHUB_REDIRECT_URI = ' ' # GitHub 로그인 후 사용자를 리디렉�
 # build docker
 docker compose up -d --build
 ```
+
 ---
 ## 👨‍💻 팀원 소개  
 <div align="center">
 
 |            | **서지민**   | **김윤성**   | **장원진**   | **김규리**   | **김아인**   | **류정훈**   | **이융현**   |
 |:--------------:|:--------------:|:--------------:|:--------------:|:--------------:|:--------------:|:--------------:|:--------------:|
-| **Profile** | <img src="https://github.com/user-attachments/assets/43627a8f-4049-4ce5-8c75-5d483b1461d9" width="600" height="100"> | <img src="https://github.com/user-attachments/assets/8a558c12-e4db-49b8-998e-71ce761f81fe" width="600" height="100"> | <img src="https://github.com/user-attachments/assets/3fe09797-881d-49ea-a443-f8ee66d1cab9" width="600" height="100"> | <img src="https://github.com/user-attachments/assets/c0e876e9-dbf5-46e4-b96d-0e5c716dcca5" width="600" height="100"> | <img src="https://github.com/user-attachments/assets/cfcf01e5-9c54-4091-8f26-62854ff83c89" width="600" height="100"> | <img src="https://github.com/user-attachments/assets/0053ff1c-3d52-4104-ba0e-9a25fc19703a" width="600" height="100"> | <img src="https://github.com/user-attachments/assets/5599d89d-a23d-4ca5-9a83-8a2ba0850698" width="600" height="100"> |
+| **Profile** | <img src="https://github.com/user-attachments/assets/43627a8f-4049-4ce5-8c75-5d483b1461d9" width="100"> | <img src="https://github.com/user-attachments/assets/8a558c12-e4db-49b8-998e-71ce761f81fe" width="100"> | <img src="https://github.com/user-attachments/assets/a8d2531c-1164-48da-8035-b6ec9664f4e2" width="100"> | <img src="https://github.com/user-attachments/assets/c0e876e9-dbf5-46e4-b96d-0e5c716dcca5" width="100"> | <img src="https://github.com/user-attachments/assets/cfcf01e5-9c54-4091-8f26-62854ff83c89" width="100"> | <img src="https://github.com/user-attachments/assets/0053ff1c-3d52-4104-ba0e-9a25fc19703a" width="100"> | <img src="https://github.com/user-attachments/assets/5599d89d-a23d-4ca5-9a83-8a2ba0850698" width="100"> |
 | **Role**   | **Team Leader**<br>Frontend<br>UI/UX<br>DevOps | Frontend<br>UI/UX | Frontend<br>UI/UX | Backend | Backend | Backend | Backend |
-| **GitHub** | [@Lauiee](https://github.com/Lauiee) | [@Nekerworld](https://github.com/Nekerworld) | [@wonjinjang](https://github.com/wonjinjang) | [@gyuri224](https://github.com/gyuri224) | [@einhin](https://github.com/einhn) | [@RYUJEONGHUN](https://github.com/RYUJEONGHUN) | [@fostacion](https://github.com/fostacion) |
+| **GitHub** | [@Lauiee    ](https://github.com/Lauiee) | [@Nekerworld ](https://github.com/Nekerworld) | [@wonjinjang ](https://github.com/wonjinjang) | [@gyuri224   ](https://github.com/gyuri224) | [@einhin](https://github.com/einhn) | [@RYUJEONGHUN](https://github.com/RYUJEONGHUN) | [@fostacion  ](https://github.com/fostacion) |
 
 </div>
 
