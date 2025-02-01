@@ -26,22 +26,21 @@ def get_grade(score):
 
 
 def get_problem_type(pr_review_result):
+    problem_type = extract_pattern(r'"problem_type":\s*"([^"]*)"', pr_review_result)
+    print(f"Problem type: {problem_type}")
+    return problem_type
+'''
     try:
         # JSON 파싱
         review_data = json.loads(pr_review_result)
         problem_type = review_data.get("problem_type", None)
-
         if problem_type:
             print("problem_type:", problem_type)
         else:
             print("problem_type not found.")
 
     except json.JSONDecodeError:
-        problem_type = extract_pattern(r'"problem_type":\s*"([^"]*)"', pr_review_result)
-        print("Invalid JSON format. problem_type(regex):", problem_type)
-
-    return problem_type
-
+'''
 
 # review에서 text와 score 추출
 def get_score_review_text(review_result):

@@ -36,6 +36,7 @@ ALLOWED_HOSTS = [
     'refactory.store',
     '34.44.174.202'
     'www.refactory.store',
+    '55a9-221-151-106-114.ngrok-free.app', # ngrok 도메인 추가
     '6565-221-151-106-114.ngrok-free.app', # ngrok 도메인 추가
     'nginx'
 ]
@@ -65,6 +66,7 @@ INSTALLED_APPS = [
     'review',
     'drf_yasg',
     'corsheaders',
+    'storages',
     'django_prometheus',
 ]
 
@@ -180,7 +182,17 @@ DATABASES = {
     }
 }
 
+# AWS S3 설정
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME')
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
 
+AWS_S3_FILE_OVERWRITE = True
+AWS_DEFAULT_ACL = None
+
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
